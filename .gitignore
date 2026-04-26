@@ -1,0 +1,49 @@
+## R specific
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+.RDataTmp
+
+# User-specific files
+.Ruserdata
+
+# RStudio files
+.Rproj.user/
+
+# Output files from R CMD build/check
+/*.tar.gz
+/*.Rcheck/
+
+# Knitr and R Markdown cache and temp files
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+
+# R Environment Variables
+.Renviron
+
+## Jupyter (ipynb) specific
+# Autosave checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# IPython history
+profile_default/
+ipython_config.py
+
+## Other
+# Large data files
+*.csv
+*.rds
+*.RData
+*.feather
+*.parquet
+
+# Python/Jupyter-related compiled files
+__pycache__/
+*.py[cod]
+*$py.class
