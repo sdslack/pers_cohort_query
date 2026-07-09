@@ -5,8 +5,3 @@ repos:
       - id: nbstripout
         files: ".ipynb"
 
-  - repo: https://github.com/mwouts/jupytext
-    rev: v1.17.3
-    hooks:
-      - id: jupytext
-        args: [--sync]
