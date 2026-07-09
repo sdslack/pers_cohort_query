@@ -1,4 +1,4 @@
-# genosis_aou
+# pers_cohort_query
 
 The first version of the tool will handle the data integration stage.
 It requires two input files:
@@ -23,31 +23,34 @@ It outputs a TSV file with:
 
 *TODO: how to handle longitudinal data?*
 
-
 ### Setup
 
-1. Open All of Us or local analysis environment.
-
-2. Install pre-commit on system:
+1. Clone and enter this repo:
 
 ```bash
-pip install pre-commit
+git clone git@github.com:sdslack/pers_cohort_query.git
+cd pers-cohort-query
 
 ```
 
-3. Clone and enter this repo:
+2. Create and activate the conda environment:
 
 ```bash
-git clone git@github.com:sdslack/genosis_aou.git
-cd genosis_aou
+conda env create -f environment.yaml
+conda activate pers_cohort_query
 
 ```
 
-4. Install precommit to this repo:
+3. Install this package in development mode:
+
+```bash
+pip install -e ".[dev]"
+
+```
+
+4. Install precommit hooks:
 
 ```bash
 pre-commit install
 
 ```
-
-
