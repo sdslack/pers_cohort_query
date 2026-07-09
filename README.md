@@ -5,9 +5,9 @@ It requires two input files:
 
 1. a TSV file with lab values, in columns: id, value, date
 
-*TODO: add more detail here.*
-*TODO: can this be more general than "lab values"?*
-*TODO: revisit what data file formats are best.*
++ *TODO: add more detail here.*
++ *TODO: can this be more general than "lab values"?*
++ *TODO: revisit what data file formats are best.*
 
 2. a TSV file with personalized cohort definitions, where each row is a cohort,
 so column 1 is the ID of an individual, and columns 2-101 are that individual's
@@ -21,7 +21,7 @@ It outputs a TSV file with:
 + personalized cohort lab value mean
 + personalized cohort lab value standard deviation
 
-*TODO: how to handle longitudinal data?*
++ *TODO: how to handle longitudinal data?*
 
 ### Setup
 
