@@ -7,8 +7,7 @@ name = "pers_cohort_query"
 version = "0.1.0"
 description = "Personalized cohort builder for All of Us"
 requires-python = ">=3.10"
-license = "MIT"
-license-files = ["LICENSE"]
+license = { file = "LICENSE" }
 
 dependencies = [
     "numpy",
