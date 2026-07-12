@@ -35,7 +35,7 @@ def make_ids(n_indv: int) -> list[str]:
 
 def make_pers_cohorts(
     ids: list[str], cohort_size: int, rng: np.random.Generator
-) -> pd.DataFrame():
+) -> pd.DataFrame:
     """
     Returns dataframe with random cohort of the given size for each of the IDs
     in list, made with only the IDs in list. First column is "id" for an
@@ -70,7 +70,7 @@ def make_pers_cohorts(
     return pd.DataFrame(cohorts)
 
 
-def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame():
+def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame:
     """
     Returns dataframe with random lab values and dates between 2010-2020,
     with 3-10 measurements per person for each ID in list. Columns are "id",
@@ -113,7 +113,7 @@ def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame():
     return lab_values
 
 
-def write_data(df: pd.DataFrame(), output_path: Path) -> None:
+def write_data(df: pd.DataFrame, output_path: Path) -> None:
     """
     Writes given DataFrame to the specified output path
 
