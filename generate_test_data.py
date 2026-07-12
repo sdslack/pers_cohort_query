@@ -59,7 +59,9 @@ def make_pers_cohorts(
     cohorts = []
 
     for id_ in ids:
-        cohort = rng.choice([i for i in ids if i != id_], size=cohort_size, replace=False)
+        cohort = rng.choice(
+            [i for i in ids if i != id_], size=cohort_size, replace=False
+        )
 
         row = {"id": id_}
         for idx, member in enumerate(cohort):
