@@ -79,10 +79,11 @@ def write_small_data(
         Full lab values DataFrame to select rows from
     subset_ids : list[str]
         IDs to keep in cohorts_small.csv
+    output_dir : Path
+        Directory to write the output CSV files to
     id_col : str, optional
         Name of the person-identifier column, by default "id"
     """
-    output_dir = Path("test") / "data" / "input"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cohorts_small = cast(pd.DataFrame, cohorts.loc[cohorts[id_col].isin(subset_ids)])
@@ -96,12 +97,13 @@ def write_small_data(
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
     input_dir = repo_root / "data" / "input"
+    output_dir = repo_root / "test" / "data" / "input"
 
     cohorts = pd.read_csv(input_dir / "cohorts.csv")
     lab_values = pd.read_csv(input_dir / "lab_values.csv")
 
     subset_ids = select_subset_ids(cohorts, N_SMALL)
-    write_small_data(cohorts, lab_values, subset_ids, input_dir)
+    write_small_data(cohorts, lab_values, subset_ids, output_dir)
 
 
 if __name__ == "__main__":
