@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .integration import compute_cohort_shifts, load_query_inputs
+from .integration import compute_cohort_shifts, load_query_inputs, write_output
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,17 +18,25 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
-        "-l", "--lab-values", type=Path, help="Path to the lab values CSV/TSV file"
+        "-l",
+        "--lab-values",
+        type=Path,
+        help="Path to the lab values CSV/TSV file",
+        required=True,
     )
     parser.add_argument(
-        "-c", "--cohorts", type=Path, help="Path to the cohorts CSV/TSV file"
+        "-c",
+        "--cohorts",
+        type=Path,
+        help="Path to the cohorts CSV/TSV file",
+        required=True,
     )
     parser.add_argument(
         "-o",
         "--output",
         type=Path,
-        default=Path("data/output/cohort_shifts.tsv"),
-        help="Path to write the output TSV file (default: %(default)s)",
+        default=Path("data/output/cohort_shifts.csv"),
+        help="Path to write the output CSV file (default: %(default)s)",
     )
     parser.add_argument(
         "--person-col",
@@ -40,18 +48,25 @@ def build_parser() -> argparse.ArgumentParser:
         default="value",
         help="Name of the value column in the lab values file (default: %(default)s)",
     )
+    parser.add_argument(
+        "--date-col",
+        default="date",
+        help="Name of the date column in the lab values file (default: %(default)s)",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Run the CLI: load inputs, compute cohort shifts, and write the output TSV."""
+    """Run the CLI: load inputs, compute cohort shifts, and write the output CSV."""
     args = build_parser().parse_args(argv)
 
-    lab_values, cohorts = load_query_inputs(args.lab_values, args.cohorts)
+    lab_values, cohorts = load_query_inputs(
+        args.lab_values, args.cohorts, date_col=args.date_col
+    )
     shifts = compute_cohort_shifts(
         lab_values, cohorts, person_col=args.person_col, value_col=args.value_col
     )
-    shifts.to_csv(args.output, sep="\t", index=False)
+    write_output(shifts, args.output)
     print(f"Wrote output to {args.output}")
 
 
