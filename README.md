@@ -3,7 +3,8 @@
 The first version of the tool will handle the data integration stage.
 It requires two input files:
 
-1. a CSV/TSV file with lab values, in columns: id, date, value
+1. a CSV/TSV file with lab values, in columns: id, date, value. Assumes that 
+filtering of the lab values has already been done.
 
 + *TODO: add more detail here.*
 + *TODO: can this be more general than "lab values"?*
