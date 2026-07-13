@@ -1,4 +1,4 @@
-"""Functions to make test data
+"""Functions to simulate data
 
 * make_ids - returns given number of IDs in a list
 * make_pers_cohorts - returns dataframe with random cohort of the given
@@ -131,8 +131,8 @@ def write_data(df: pd.DataFrame, output_path: Path) -> None:
 
 
 def main() -> None:
-    repo_root = Path(__file__).resolve().parent
-    output_dir = repo_root / "test" / "data" / "input"
+    repo_root = Path(__file__).resolve().parent.parent
+    output_dir = repo_root / "data" / "input"
 
     # Make IDs for all individuals in the test data
     ids = make_ids(100)
