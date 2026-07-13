@@ -12,7 +12,11 @@ license = { file = "LICENSE" }
 dependencies = [
     "numpy",
     "pandas",
+    "scipy",
 ]
+
+[project.scripts]
+pers-cohort-query = "pers_cohort_query.cli:main"
 
 [project.optional-dependencies]
 dev = [
