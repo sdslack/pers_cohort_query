@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .integration import compute_cohort_shifts, load_query_inputs, write_output
+from .integrate import compute_cohort_shifts, load_query_inputs, write_output
 
 
 def build_parser() -> argparse.ArgumentParser:
