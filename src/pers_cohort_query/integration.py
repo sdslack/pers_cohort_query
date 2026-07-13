@@ -53,6 +53,8 @@ def load_tabular_data(
 def load_query_inputs(
     lab_values_path: str | Path,
     cohorts_path: str | Path,
+    *,
+    date_col: str = "date",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load the two query input tables.
 
@@ -62,6 +64,9 @@ def load_query_inputs(
         Path to the lab values CSV or TSV file
     cohorts_path : str | Path
         Path to the cohorts CSV or TSV file
+    date_col : str, optional
+        Name of the date column in the lab values file to parse as a date,
+        by default "date"
 
     Returns
     -------
@@ -69,26 +74,21 @@ def load_query_inputs(
         DataFrame containing lab values and DataFrame containing cohorts
 
     """
-    lab_values = load_tabular_data(lab_values_path, parse_dates=["date"])
+    lab_values = load_tabular_data(lab_values_path, parse_dates=[date_col])
     cohorts = load_tabular_data(cohorts_path)
     return lab_values, cohorts
 
 
-def get_density_peak(
-    values: pd.Series | np.ndarray | list[float], grid_size: int = 512
-) -> float:
+def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
     """Return the x-position at the peak of a Gaussian kernel density estimate.
 
     Bandwidth is chosen with Silverman's rule of thumb, and the density is
-    evaluated on an evenly spaced grid spanning the data range (padded by
-    three bandwidths on each side).
+    evaluated on an evenly spaced grid with a default of 512 points.
 
     Parameters
     ----------
     values : pd.Series | np.ndarray | list[float]
         Values to estimate density from
-    grid_size : int, optional
-        Number of points in the grid used to evaluate the density, by default 512
 
     Returns
     -------
@@ -246,5 +246,7 @@ def write_output(df: pd.DataFrame, output_path: str | Path) -> None:
     output_path : str | Path
         Path to the output CSV file
     """
-    output_file = Path(output_path)
-    df.to_csv(output_file, index=False)
+    output_dir = Path(output_path).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    df.to_csv(Path(output_path), index=False)
