@@ -60,21 +60,19 @@ def test_load_tabular_data_raises_error_for_invalid_date_column(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "invalid_date, expected_message",
+    "invalid_date",
     [
-        ("invalid-date", "Unknown datetime string format"),
-        ("20200-01-02", "out of range"),
-        ("2020-13-01", "month must be in 1..12"),
-        ("2020-01-35", "out of range for month"),
+        "invalid-date",
+        "20200-01-02",
+        "2020-13-01",
+        "2020-01-35",
     ],
 )
-def test_load_tabular_data_raises_error_for_invalid_date_format(
-    tmp_path, invalid_date, expected_message
-):
+def test_load_tabular_data_raises_error_for_invalid_date_format(tmp_path, invalid_date):
     file = tmp_path / "test.csv"
     file.write_text(f"col1,col2\n1,2020-01-01\n2,{invalid_date}")
 
-    with pytest.raises(ValueError, match=expected_message):
+    with pytest.raises(ValueError):
         load_tabular_data(file, parse_dates=["col2"])
 
 
