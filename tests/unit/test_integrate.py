@@ -325,7 +325,7 @@ def test_get_pers_cohort_density_peaks_empty_cohorts():
     cohorts = pd.DataFrame(columns=["id", "member_1", "member_2"])
 
     # Assert raises value error
-    with pytest.raises(ValueError, match="Cohorts file must have at least one row."):
+    with pytest.raises(ValueError, match=r"Cohorts file must have at least one row\."):
         get_pers_cohort_density_peaks(lab_values, cohorts)
 
 
@@ -342,7 +342,7 @@ def test_get_pers_cohort_density_peaks_person_in_own_cohort():
         }
     )
 
-    with pytest.raises(ValueError, match="Person '1' is in their own cohort."):
+    with pytest.raises(ValueError, match=r"Person '1' is in their own cohort\."):
         get_pers_cohort_density_peaks(lab_values, cohorts)
 
 
