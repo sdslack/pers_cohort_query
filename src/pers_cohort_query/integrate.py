@@ -180,6 +180,8 @@ def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
         raise ValueError(
             "Cannot compute density peak: at least two values are required."
         )
+    if np.std(values) == 0:
+        raise ValueError("Cannot compute density peak: all values are identical.")
 
     kde = scipy.stats.gaussian_kde(values, bw_method="silverman")
     x_vals = np.linspace(values.min(), values.max(), 512)
@@ -257,7 +259,7 @@ def get_pers_cohort_density_peaks(
     peaks: dict[str, float] = {}
     for _, cohort_row in cohorts.iterrows():
         person_id = str(cohort_row[person_col])
-        if person_id in cohort_row[member_columns].tolist():
+        if str(person_id) in cohort_row[member_columns].astype(str).tolist():
             raise ValueError(f"Person '{person_id}' is in their own cohort.")
         cohort_members = [str(member) for member in cohort_row[member_columns].tolist()]
         cohort_values: list[float] = []
