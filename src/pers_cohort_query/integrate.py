@@ -24,7 +24,7 @@ import scipy.stats
 def load_tabular_data(
     path: str | Path, *, parse_dates: list[str] | None = None
 ) -> pd.DataFrame:
-    """Load a CSV or TSV file into a DataFrame. 
+    """Load a CSV or TSV file into a DataFrame.
 
     Parameters
     ----------
@@ -50,15 +50,14 @@ def load_tabular_data(
         separator = ","
     else:
         raise ValueError(f"Unsupported file type: {suffix}.")
-    
+
     df = pd.read_csv(file_path, sep=separator, parse_dates=parse_dates)
 
     # Ensure all values in date column are valid dates or missing values, and
     # convert to dates only
     if parse_dates is not None:
         for col in parse_dates:
-            df[col] = pd.to_datetime(
-                df[col], errors="raise", format = "mixed").dt.date
+            df[col] = pd.to_datetime(df[col], errors="raise", format="mixed").dt.date
 
     return df
 
@@ -143,7 +142,6 @@ def load_query_inputs(
         raise ValueError(
             f"Individuals in lab values not found in cohorts: {', '.join(missing_in_cohort)}"
         )
-    
 
     return lab_values, cohorts
 
@@ -245,11 +243,10 @@ def get_pers_cohort_density_peaks(
         raise KeyError(f"Missing '{value_col}' column in lab_values")
     if person_col not in cohorts.columns:
         raise KeyError(f"Missing '{person_col}' column in cohorts")
-    
+
     # Check cohorts has at least one row after header row
     if cohorts.shape[0] == 0:
         raise ValueError("Cohorts file must have at least one row.")
-
 
     member_columns = [column for column in cohorts.columns if column != person_col]
     people_values: dict[str, list[float]] = {
@@ -261,9 +258,7 @@ def get_pers_cohort_density_peaks(
     for _, cohort_row in cohorts.iterrows():
         person_id = str(cohort_row[person_col])
         if person_id in cohort_row[member_columns].tolist():
-            raise ValueError(
-                f"Person '{person_id}' is in their own cohort."
-            )
+            raise ValueError(f"Person '{person_id}' is in their own cohort.")
         cohort_members = [str(member) for member in cohort_row[member_columns].tolist()]
         cohort_values: list[float] = []
         for member in cohort_members:
