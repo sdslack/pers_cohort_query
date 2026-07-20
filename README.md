@@ -1,19 +1,21 @@
 # pers_cohort_query
 
-The first version of the tool will handle the data integration stage.
+The first version of this tool handles only the data integration stage.
 It requires two input files:
 
-1. a CSV/TSV file with lab values, in columns: id, date, value. Assumes that 
+1. a CSV/TSV file with lab values, in columns: `id`, `date`, `value`. Assumes that 
 filtering of the lab values has already been done.
 
-+ *TODO: add more detail here.*
-+ *TODO: can this be more general than "lab values"?*
-+ *TODO: revisit what data file formats are best.*
++ Dates should be in ISO 8601 format (e.g., YYYY-MM-DD or YYYY-MM-DD HH:MM:SS).
++ There can be no missing values in any of the three columns.
 
-2. a CSV/TSV file with personalized cohort definitions, where each row is a cohort;
-so column 1 is the ID of an individual, and columns 2-(N+1) are that individual's
-personalized cohort members (e.g., `member_1`..`member_N`).
+2. a CSV/TSV file with personalized cohort definitions, where each row is a cohort.
+Column one should be called `id` and is the ID of an individual, and columns
+2-(N+1) are that individual's personalized cohort members, any column names are
+accepted.
 
++ All cohorts must be the same size, and the number of members must be at least 2.
++ There can be no missing values in the input file.
 + This can be generated from GenoSiS or using PCA.
 
 It outputs a TSV file with:
@@ -21,8 +23,6 @@ It outputs a TSV file with:
 + individual ID
 + personalized cohort lab value mean
 + personalized cohort lab value standard deviation
-
-+ *TODO: how to handle longitudinal data?*
 
 ### Setup
 
@@ -55,3 +55,12 @@ pip install -e ".[dev]"
 pre-commit install
 
 ```
+
+### Development TODOs
+
++ Need to revisit how to handle longitudinal data
++ Likely want to revisit get_density_peak and save more than just peak - maybe
+    object with peak, mean, stdev?
++ Do I need to add more tests? For example, for function like
+    get_pers_cohort_density_peaks, so I need to test invalid date input, or
+    okay to assume that and similar tests run upstream by other functions?
