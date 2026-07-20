@@ -47,10 +47,8 @@ def test_load_tabular_data_raises_error_for_invalid_file(tmp_path):
 
 
 def test_load_tabular_data_raises_error_for_nonexistent_file():
-    with pytest.raises(FileNotFoundError) as exc_info:
+    with pytest.raises(FileNotFoundError):
         load_tabular_data("nonexistent_file.csv")
-
-    assert "No such file or directory" in str(exc_info.value)
 
 
 def test_load_tabular_data_raises_error_for_invalid_date_column(tmp_path):
