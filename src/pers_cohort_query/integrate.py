@@ -129,9 +129,13 @@ def load_query_inputs(
             f"{', '.join(na_cohort_columns[na_cohort_columns].index)}"
         )
 
-    # Check that same individuals are present in both lab_values and cohorts
+    # Check that same individuals are present in both lab_values and cohorts.
+    # Individuals referenced in cohorts include both primary ids and cohort members.
     lab_ids = set(lab_values["id"].astype(str))
-    cohort_ids = set(cohorts["id"].astype(str))
+    cohort_member_columns = [column for column in cohorts.columns if column != "id"]
+    cohort_ids = set(cohorts["id"].astype(str)) | set(
+        cohorts[cohort_member_columns].astype(str).to_numpy().ravel()
+    )
     missing_in_lab = cohort_ids - lab_ids
     if missing_in_lab:
         raise ValueError(
