@@ -107,6 +107,13 @@ def load_query_inputs(
         raise KeyError(
             f"Missing required columns in cohorts: {', '.join(missing_cohort_columns)}"
         )
+
+    # Check that `id` is the first column in cohorts
+    if cohorts.columns[0] != "id":
+        raise ValueError(
+            "The first column of the cohorts file must be 'id', followed by "
+            "at least two cohort member columns."
+        )
     if cohorts.shape[1] < 3:
         raise ValueError(
             "Cohorts file must have at least three columns: `id` and at least "

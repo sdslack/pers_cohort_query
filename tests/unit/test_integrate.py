@@ -200,6 +200,23 @@ def test_load_query_inputs_raises_error_for_ids_in_lab_values_not_in_cohorts(tmp
         load_query_inputs(lab_values_file, cohorts_file)
 
 
+def test_load_query_inputs_raises_error_for_cohort_id_column_not_first(tmp_path):
+    lab_values_file = tmp_path / "lab_values.csv"
+    lab_values_file.write_text(
+        "id,date,value\n1,2020-01-01,10\n2,2020-01-02,20\n3,2020-01-03,30\n4,2020-01-04,40"
+    )
+
+    cohorts_file = tmp_path / "cohorts.csv"
+    cohorts_file.write_text("member_1,id,member_2,member_3\n2,1,3,4")
+
+    with pytest.raises(
+        ValueError, match="The first column of the cohorts file must be 'id'"
+    ) as exc_info:
+        load_query_inputs(lab_values_file, cohorts_file)
+
+    print(str(exc_info.value))
+
+
 # endregion
 
 # region: tests for get_density_peak
