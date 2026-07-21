@@ -102,14 +102,16 @@ def test_load_tabular_data_raises_error_for_empty_file(tmp_path):
 # region: tests for load_query_inputs
 def test_load_query_inputs_loads_both_files(tmp_path):
     lab_values_file = tmp_path / "lab_values.csv"
-    lab_values_file.write_text("id,date,value\n1,2020-01-01,10\n2,2020-01-02,20")
+    lab_values_file.write_text(
+        "id,date,value\n1,2020-01-01,10\n2,2020-01-02,20\n3,2020-01-03,30\n4,2020-01-04,40"
+    )
 
     cohorts_file = tmp_path / "cohorts.csv"
     cohorts_file.write_text("id,member_1,member_2\n1,2,3\n2,3,4")
 
     lab_values, cohorts = load_query_inputs(lab_values_file, cohorts_file)
 
-    assert lab_values.shape == (2, 3)
+    assert lab_values.shape == (4, 3)
     assert cohorts.shape == (2, 3)
 
 
@@ -186,7 +188,7 @@ def test_load_query_inputs_raises_error_for_ids_in_cohorts_not_in_lab_values(tmp
 def test_load_query_inputs_raises_error_for_ids_in_lab_values_not_in_cohorts(tmp_path):
     lab_values_file = tmp_path / "lab_values.csv"
     lab_values_file.write_text(
-        "id,date,value\n1,2020-01-01,10\n2,2020-01-02,20\n3,2020-01-03,30"
+        "id,date,value\n1,2020-01-01,10\n2,2020-01-02,20\n3,2020-01-03,30\n4,2020-01-04,40"
     )
 
     cohorts_file = tmp_path / "cohorts.csv"
