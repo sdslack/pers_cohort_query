@@ -4,7 +4,7 @@
 + load_query_inputs: Load the two input tables used by the analysis pipeline
 + get_density_peak: Calculate the peak of a distribution
 + get_all_density_peak: Calculate the density peak across all lab values
-+ get_pers_cohort_density_peak: Calculate each person's cohort density peak
++ get_pers_cohort_density_peaks: Calculate each person's cohort density peak
 + compute_cohort_shifts: Compute the cohort-specific density shift for each person
 + write_output: Write the output DataFrame to a CSV file
 
@@ -261,6 +261,10 @@ def get_pers_cohort_density_peaks(
         person_id = str(cohort_row[person_col])
         if str(person_id) in cohort_row[member_columns].astype(str).tolist():
             raise ValueError(f"Person '{person_id}' is in their own cohort.")
+        if cohort_row[member_columns].isna().any():
+            raise ValueError(
+                f"Cohort members for person '{person_id}' contain missing values."
+            )
         cohort_members = [str(member) for member in cohort_row[member_columns].tolist()]
         cohort_values: list[float] = []
         for member in cohort_members:

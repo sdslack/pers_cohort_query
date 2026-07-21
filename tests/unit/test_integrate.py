@@ -346,6 +346,25 @@ def test_get_pers_cohort_density_peaks_person_in_own_cohort():
         get_pers_cohort_density_peaks(lab_values, cohorts)
 
 
+def test_get_pers_cohort_density_peaks_missing_cohort_member():
+    lab_values = pd.DataFrame(
+        {"id": ["1", "2"], "date": ["2020-01-01", "2020-01-02"], "value": [10.0, 20.0]}
+    )
+
+    cohorts = pd.DataFrame(
+        {
+            "id": ["1"],
+            "member_1": ["2"],
+            "member_2": [None],  # missing cohort member
+        }
+    )
+
+    with pytest.raises(
+        ValueError, match=r"Cohort members for person '1' contain missing values\."
+    ):
+        get_pers_cohort_density_peaks(lab_values, cohorts)
+
+
 # endregion
 
 # region: tests compute_cohort_shifts
