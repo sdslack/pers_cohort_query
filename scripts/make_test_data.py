@@ -13,8 +13,6 @@ import pandas as pd
 
 N_SMALL = 5
 
-# TODO: revisit and make sure consistent with simulate_data.py
-
 
 def select_subset_ids(cohorts: pd.DataFrame, n: int, id_col: str = "id") -> list[str]:
     """
