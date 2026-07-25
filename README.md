@@ -42,7 +42,40 @@ It outputs a TSV file with two columns:
 + persoanlized cohort shift in lab value relative to the population-level
     reference range
 
-## Setup
+## Installation
+
+### From Source
+
+Clone the repository and install the package:
+
+```bash
+git clone git@github.com:sdslack/pers_cohort_query.git
+cd pers_cohort_query
+pip install .
+
+```
+
+**Note:** The repository includes example input files in `data/input/` that are
+used in the example usage below.
+
+
+## Example Usage
+
+The repository includes example input files in `data/input/` and an example
+output file in `data/output/`. To run the tool:
+
+```bash
+pers-cohort-query \
+    --lab-values data/input/lab_values.csv \
+    --cohorts data/input/cohorts.csv \
+    --output data/output/cohort_shifts.tsv
+
+```
+
+## Development
+
+To contribute to the project or modify the source code, create the development
+environment and install the package in editable mode:
 
 1. Clone and enter this repo:
 
@@ -71,22 +104,6 @@ pip install -e ".[dev]"
 
 ```bash
 pre-commit install
-
-```
-
-## Example Usage
-
-The repository includes example input files in `data/input/` and an example
-output file in `data/output/`. To run the tool, use the following command:
-
-```bash
-mamba activate pers_cohort_query
-pip install .
-
-pers-cohort-query \
-    --lab-values data/input/lab_values.csv \
-    --cohorts data/input/cohorts.csv \
-    --output data/output/cohort_shifts.tsv
 
 ```
 
