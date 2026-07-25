@@ -83,7 +83,7 @@ output file in `data/output/`. To run the tool, use the following command:
 mamba activate pers_cohort_query
 pip install .
 
-python pers-cohort-query \
+pers-cohort-query \
     --lab-values data/input/lab_values.csv \
     --cohorts data/input/cohorts.csv \
     --output data/output/cohort_shifts.tsv
