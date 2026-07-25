@@ -330,19 +330,3 @@ def compute_cohort_shifts(
         for person_id, cohort_peak in cohort_peaks.items()
     ]
     return pd.DataFrame(rows)
-
-
-def write_output(df: pd.DataFrame, output_path: str | Path) -> None:
-    """Write the output DataFrame to a CSV file.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame to write to CSV
-    output_path : str | Path
-        Path to the output CSV file
-    """
-    output_dir = Path(output_path).parent
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    df.to_csv(Path(output_path), index=False)

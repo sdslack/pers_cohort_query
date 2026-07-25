@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .integrate import compute_cohort_shifts, load_query_inputs, write_output
+from .integrate import compute_cohort_shifts, load_query_inputs
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,7 +66,10 @@ def main(argv: list[str] | None = None) -> None:
     shifts = compute_cohort_shifts(
         lab_values, cohorts, person_col=args.person_col, value_col=args.value_col
     )
-    write_output(shifts, args.output)
+
+    output_dir = Path(args.output).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+    shifts.to_csv(Path(args.output), index=False)
     print(f"Wrote output to {args.output}")
 
 

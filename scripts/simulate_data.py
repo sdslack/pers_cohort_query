@@ -115,21 +115,6 @@ def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame:
     return lab_values
 
 
-def write_data(df: pd.DataFrame, output_path: Path) -> None:
-    """
-    Writes given DataFrame to the specified output path
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame to write to CSV
-    output_path : Path
-        Path to write the generated data to
-    """
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, index=False)
-
-
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
     output_dir = repo_root / "data" / "input"
@@ -147,8 +132,9 @@ def main() -> None:
     lab_values = make_lab_values(ids, rng)
 
     # Write out test data
-    write_data(cohorts, output_dir / "cohorts.csv")
-    write_data(lab_values, output_dir / "lab_values.csv")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    cohorts.to_csv(output_dir / "cohorts.csv", index=False)
+    lab_values.to_csv(output_dir / "lab_values.csv", index=False)
 
 
 if __name__ == "__main__":

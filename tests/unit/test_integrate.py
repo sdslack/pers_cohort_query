@@ -7,7 +7,6 @@ from pers_cohort_query.integrate import (
     get_all_density_peak,
     get_pers_cohort_density_peaks,
     compute_cohort_shifts,
-    write_output,
 )
 import pandas as pd
 import pytest
@@ -412,36 +411,6 @@ def test_compute_cohort_shifts_example():
     assert isinstance(shifts["shift"].iloc[0], float)
     assert shifts["id"].iloc[1] == "2"
     assert isinstance(shifts["shift"].iloc[1], float)
-
-
-# endregion
-
-# region: tests for write_output
-
-
-def test_write_output_creates_file(tmp_path):
-    output_file = tmp_path / "output.csv"
-    df = pd.DataFrame({"id": ["1", "2"], "shift": [0.5, -0.5]})
-
-    write_output(df, output_file)
-
-    assert output_file.exists()
-    written_df = pd.read_csv(output_file)
-    assert written_df.shape == (2, 2)
-    assert list(written_df.columns) == ["id", "shift"]
-    assert list(written_df["id"]) == [1, 2]
-    assert list(written_df["shift"]) == [0.5, -0.5]
-
-
-def test_write_output_creates_missing_parent_directories(tmp_path):
-    nested_path = tmp_path / "nonexistent_dir" / "output.csv"
-    df = pd.DataFrame({"id": ["1", "2"], "shift": [0.5, -0.5]})
-
-    write_output(df, nested_path)
-
-    assert nested_path.exists()
-    written_df = pd.read_csv(nested_path)
-    assert written_df.shape == (2, 2)
 
 
 # endregion
