@@ -1,14 +1,4 @@
-"""Data-integration helpers for personalized cohort analysis.
-
-+ load_tabular_data: Load CSV or TSV into a DataFrame
-+ load_query_inputs: Load the two input tables used by the analysis pipeline
-+ get_density_peak: Calculate the peak of a distribution
-+ get_all_density_peak: Calculate the density peak across all lab values
-+ get_pers_cohort_density_peaks: Calculate each person's cohort density peak
-+ compute_cohort_shifts: Compute the cohort-specific density shift for each person
-+ write_output: Write the output DataFrame to a CSV file
-
-"""
+"""Data-integration helpers for personalized cohort analysis."""
 
 from __future__ import annotations
 
