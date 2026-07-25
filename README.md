@@ -61,16 +61,19 @@ used in the example usage below.
 
 ## Example Usage
 
-The repository includes example input files in `data/input/` and an example
-output file in `data/output/`. To run the tool:
+The repository includes example input files in `examples/input/` and an example
+output file in `examples/output/`. To run the tool:
 
 ```bash
 pers-cohort-query \
-    --lab-values data/input/lab_values.csv \
-    --cohorts data/input/cohorts.csv \
-    --output data/output/cohort_shifts.tsv
+    --lab-values examples/input/lab_values.csv \
+    --cohorts examples/input/cohorts.csv \
+    --output examples/output/cohort_shifts.tsv
 
 ```
+
+**Note:** The `data/` directory is ignored by git, so it can be used to store
+your own input files (`data/input/`) and output files (`data/output/`).
 
 ## Development
 

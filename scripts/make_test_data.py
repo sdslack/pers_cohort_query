@@ -1,10 +1,4 @@
-"""Functions to make small test data from the full simulated data
-
-* select_subset_ids - returns a small subset of the IDs in a cohorts dataframe
-* get_member_ids - returns all cohort member IDs referenced in a cohorts dataframe
-* write_small_data - writes small subset of cohorts/lab_values to CSV
-
-"""
+"""Functions to make small test data from the full simulated data."""
 
 from pathlib import Path
 from typing import cast
@@ -94,7 +88,7 @@ def write_small_data(
 
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
-    input_dir = repo_root / "data" / "input"
+    input_dir = repo_root / "examples" / "input"
     output_dir = repo_root / "tests" / "data" / "input"
 
     cohorts = pd.read_csv(input_dir / "cohorts.csv")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from importlib.metadata import version
 
 from .integrate import compute_cohort_shifts, load_query_inputs
 
@@ -52,6 +53,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--date-col",
         default="date",
         help="Name of the date column in the lab values file (default: %(default)s)",
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=version("pers-cohort-query"),
+        help="Show the version of pers-cohort-query and exit",
     )
     return parser
 

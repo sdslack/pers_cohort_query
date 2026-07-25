@@ -1,13 +1,4 @@
-"""Functions to simulate data
-
-* make_ids - returns given number of IDs in a list
-* make_pers_cohorts - returns dataframe with random cohort of the given
-    size for each of the IDs in list, made with only the IDs in list
-* make_lab_values - returns dataframe with random lab values, with 3-10
-    measurements per person for each ID in list
-* write_data - writes given dataframe to specified output directory
-
-"""
+"""Functions to simulate data."""
 
 from pathlib import Path
 import numpy as np
@@ -117,7 +108,7 @@ def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame:
 
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
-    output_dir = repo_root / "data" / "input"
+    output_dir = repo_root / "examples" / "input"
 
     # Make IDs for all individuals in the test data
     ids = make_ids(100)

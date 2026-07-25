@@ -222,3 +222,6 @@ __marimo__/
 
 # VS Code
 .vscode/
+
+# Ignore data/ dir in case set by user
+data/
