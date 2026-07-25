@@ -95,7 +95,7 @@ def write_small_data(
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
     input_dir = repo_root / "data" / "input"
-    output_dir = repo_root / "test" / "data" / "input"
+    output_dir = repo_root / "tests" / "data" / "input"
 
     cohorts = pd.read_csv(input_dir / "cohorts.csv")
     lab_values = pd.read_csv(input_dir / "lab_values.csv")
