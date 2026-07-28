@@ -1,5 +1,3 @@
-"""Command-line interface for pers_cohort_query."""
-
 from __future__ import annotations
 
 import argparse
@@ -10,7 +8,6 @@ from .integrate import compute_cohort_shifts, load_query_inputs
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the argument parser for the CLI."""
     parser = argparse.ArgumentParser(
         prog="pers-cohort-query",
         description=(
@@ -65,7 +62,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> None:
-    """Run the CLI: load inputs, compute cohort shifts, and write the output CSV."""
     args = build_parser().parse_args(argv)
 
     lab_values, cohorts = load_query_inputs(
