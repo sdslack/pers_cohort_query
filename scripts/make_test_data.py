@@ -1,4 +1,4 @@
-"""Functions to make small test data from the full simulated data."""
+"""Functions to make small test data from the simulated data."""
 
 from pathlib import Path
 from typing import cast
@@ -9,41 +9,12 @@ N_SMALL = 5
 
 
 def select_subset_ids(cohorts: pd.DataFrame, n: int, id_col: str = "id") -> list[str]:
-    """
-    Returns the first n IDs from a cohorts DataFrame.
-
-    Parameters
-    ----------
-    cohorts : pd.DataFrame
-        DataFrame with an id_col column of person IDs
-    n : int
-        Number of IDs to select
-    id_col : str, optional
-        Name of the person-identifier column, by default "id"
-
-    Returns
-    -------
-    ids : list[str]
-        Selected subset of IDs
-    """
     return cohorts[id_col].head(n).tolist()
 
 
 def get_member_ids(cohorts: pd.DataFrame, id_col: str = "id") -> list[str]:
     """
-    Returns all cohort member IDs referenced across a cohorts DataFrame.
-
-    Parameters
-    ----------
-    cohorts : pd.DataFrame
-        DataFrame with an id_col column and one or more member columns
-    id_col : str, optional
-        Name of the person-identifier column, by default "id"
-
-    Returns
-    -------
-    ids : list[str]
-        Unique cohort member IDs found in the member columns
+    Return unique cohort member IDs excluding primary IDs in `id_col`.
     """
     member_columns = [column for column in cohorts.columns if column != id_col]
     members = cohorts[member_columns].to_numpy().ravel()
@@ -58,23 +29,10 @@ def write_small_data(
     id_col: str = "id",
 ) -> None:
     """
-    Writes the rows of cohorts belonging to subset_ids to cohorts_small.csv,
-    and the rows of lab_values for subset_ids plus all of their cohort
-    members to lab_values_small.csv, in output_dir. Including cohort members'
-    lab values ensures every member referenced in cohorts_small has data.
+    Write a subset of cohort and value values data for testing.
 
-    Parameters
-    ----------
-    cohorts : pd.DataFrame
-        Full cohorts DataFrame to select rows from
-    lab_values : pd.DataFrame
-        Full lab values DataFrame to select rows from
-    subset_ids : list[str]
-        IDs to keep in cohorts_small.csv
-    output_dir : Path
-        Directory to write the output CSV files to
-    id_col : str, optional
-        Name of the person-identifier column, by default "id"
+    Includes cohort rows for `subset_ids` and alb values for those IDs as well
+    as their cohort members.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
 

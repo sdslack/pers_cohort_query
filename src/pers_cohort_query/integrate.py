@@ -11,25 +11,12 @@ import pandas as pd
 import scipy.stats
 
 
-def load_tabular_data(
-    path: str | Path, *, parse_dates: list[str] | None = None
-) -> pd.DataFrame:
+def load_tabular_data(path: str | Path, *, date_col: str | None = None) -> pd.DataFrame:
     """Load a CSV or TSV file into a DataFrame.
 
-    Parameters
-    ----------
-    path : str | Path
-        Path to the CSV or TSV file
-
-    parse_dates : list[str] | None, optional
-        List of column names to parse as dates, by default None. Dates should
-        be in ISO 8601 format (e.g., YYYY-MM-DD or YYYY-MM-DD HH:MM:SS). Only
-        date is kept, not time.
-
-    Returns
-    -------
-    df : pd.DataFrame
-        Loaded DataFrame
+    If `date_col` is provided, the column is validated and converted to
+    date-only format by discarding time information. Invalid dates raise an
+    error.
     """
 
     file_path = Path(path)
@@ -41,13 +28,13 @@ def load_tabular_data(
     else:
         raise ValueError(f"Unsupported file type: {suffix}.")
 
-    df = pd.read_csv(file_path, sep=separator, parse_dates=parse_dates)
+    df = pd.read_csv(file_path, sep=separator, parse_dates=date_col)
 
-    # Ensure all values in date column are valid dates or missing values, and
-    # convert to dates only
-    if parse_dates is not None:
-        for col in parse_dates:
-            df[col] = pd.to_datetime(df[col], errors="raise", format="mixed").dt.date
+    # Validate dates and discard time information since downstream is date-based
+    if date_col is not None:
+        df[date_col] = pd.to_datetime(
+            df[date_col], errors="raise", format="mixed"
+        ).dt.date
 
     return df
 
@@ -58,31 +45,15 @@ def load_query_inputs(
     *,
     date_col: str = "date",
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Load the two query input tables.
+    """Load and validate the lab values and cohort input tables.
 
-    Parameters
-    ----------
-    lab_values_path : str | Path
-        Path to the lab values CSV or TSV file
-    cohorts_path : str | Path
-        Path to the cohorts CSV or TSV file
-    date_col : str, optional
-        Name of the date column in the lab values file to parse as a date,
-        by default "date"
-
-    Returns
-    -------
-    lab_values, cohorts : tuple[pd.DataFrame, pd.DataFrame]
-        DataFrame containing lab values and DataFrame containing cohorts. Lab
-        values DataFrame has at least columns `id`, `date`, and `value`.
-        Cohorts DataFrame has at least columns `id` and two or more cohort
-        member columns.
-
+    Returns a lab values DataFrame with at least columns `id`, `date`, and
+    `value`, and a cohorts DataFrame with at least columns `id` and two or more
+    columns listing cohort members.
     """
-    lab_values = load_tabular_data(lab_values_path, parse_dates=[date_col])
+    lab_values = load_tabular_data(lab_values_path, date_col=date_col)
     cohorts = load_tabular_data(cohorts_path)
 
-    # Check for required columns in lab values
     required_lab_columns = {"id", date_col, "value"}
     missing_lab_columns = required_lab_columns - set(lab_values.columns)
     if missing_lab_columns:
@@ -90,7 +61,6 @@ def load_query_inputs(
             f"Missing required columns in lab values: {', '.join(missing_lab_columns)}"
         )
 
-    # Check for required columns in cohorts
     required_cohort_columns = {"id"}
     missing_cohort_columns = required_cohort_columns - set(cohorts.columns)
     if missing_cohort_columns:
@@ -98,7 +68,6 @@ def load_query_inputs(
             f"Missing required columns in cohorts: {', '.join(missing_cohort_columns)}"
         )
 
-    # Check that `id` is the first column in cohorts
     if cohorts.columns[0] != "id":
         raise ValueError(
             "The first column of the cohorts file must be 'id', followed by "
@@ -110,7 +79,6 @@ def load_query_inputs(
             "two cohort members."
         )
 
-    # Check for missing values in required lab values columns
     na_lab_columns = lab_values[list(required_lab_columns)].isna().any()
     if na_lab_columns.any():
         raise ValueError(
@@ -118,7 +86,6 @@ def load_query_inputs(
             f"{', '.join(na_lab_columns[na_lab_columns].index)}"
         )
 
-    # Check for missing values in cohorts columns
     na_cohort_columns = cohorts.isna().any()
     if na_cohort_columns.any():
         raise ValueError(
@@ -126,8 +93,6 @@ def load_query_inputs(
             f"{', '.join(na_cohort_columns[na_cohort_columns].index)}"
         )
 
-    # Check that same individuals are present in both lab_values and cohorts.
-    # Individuals referenced in cohorts include both primary ids and cohort members.
     lab_ids = set(lab_values["id"].astype(str))
     cohort_member_columns = [column for column in cohorts.columns if column != "id"]
     cohort_ids = set(cohorts["id"].astype(str)) | set(
@@ -148,28 +113,15 @@ def load_query_inputs(
 
 
 def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
-    """Return the x-position at the peak of a Gaussian kernel density estimate.
+    """Return the x-position at the peak of the Gaussian kernel density
+    estimate.
 
     Bandwidth is chosen with Silverman's rule of thumb, and the density is
-    evaluated on an evenly spaced grid with a default of 512 points.
-    NOTE: this decision was made to match R implementation.
+    evaluated on an evenly spaced grid with 512 points. Bandwidth and grid size
+    match the R implementation of this function.
 
-    Parameters
-    ----------
-    values : pd.Series | np.ndarray | list[float]
-        Values to estimate density from. Must contain at least two values,
-        none of which may be NaN.
-
-    Returns
-    -------
-    peak : float
-        Grid location of maximum estimated density
-
-    Raises
-    ------
-    ValueError
-        If `values` is empty, contains any NaN values, or has fewer than
-        two values, since downstream callers require a valid peak.
+    Raises a ValueError if values are empty, contain NaNs, contain fewer than
+    two values, or have zero variance.
     """
     values = np.asarray(values, dtype=float)
 
@@ -181,7 +133,8 @@ def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
         raise ValueError(
             "Cannot compute density peak: at least two values are required."
         )
-    if np.std(values) == 0:
+    # scipy.stats.gaussian_kde cannot estimate a density when input variance is zero
+    if np.isclose(np.std(values), 0):
         raise ValueError("Cannot compute density peak: all values are identical.")
 
     kde = scipy.stats.gaussian_kde(values, bw_method="silverman")
@@ -191,20 +144,6 @@ def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
 
 
 def get_all_density_peak(lab_values: pd.DataFrame, value_col: str = "value") -> float:
-    """Return a float with the density peak of all values.
-
-    Parameters
-    ----------
-    lab_values : pd.DataFrame
-        Measurements containing at least a value column
-    value_col : str, optional
-        Name of the value column in `lab_values`, by default "value"
-
-    Returns
-    -------
-    peak : float
-        Density peak across all measurements
-    """
     if value_col not in lab_values.columns:
         raise KeyError(f"Missing '{value_col}' column in lab_values")
 
@@ -217,28 +156,10 @@ def get_pers_cohort_density_peaks(
     person_col: str = "id",
     value_col: str = "value",
 ) -> dict[str, float]:
-    """Return a dictionary mapping each person to their cohort density peak.
+    """Compute density peaks for each person's pooled cohort lab values.
 
-    For each row in `cohorts`, gathers the `lab_values` measurements
-    belonging to that person's listed cohort members and computes the
-    density peak across those pooled values.
-
-    Parameters
-    ----------
-    lab_values : pd.DataFrame
-        Measurements with a person-identifier column and a value column
-    cohorts : pd.DataFrame
-        Cohort membership table; the `person_col` column identifies the
-        person, and all other columns list that person's cohort members
-    person_col : str, optional
-        Name of the person-identifier column shared by both inputs, by default "id"
-    value_col : str, optional
-        Name of the value column in `lab_values`, by default "value"
-
-    Returns
-    -------
-    peaks : dict[str, float]
-        Mapping of person ID to the density peak of their cohort's pooled values
+    For each person in `cohorts`, all lab values from their listed cohort
+    members are used to compute a single density peak.
     """
     if person_col not in lab_values.columns:
         raise KeyError(f"Missing '{person_col}' column in lab_values")
@@ -246,8 +167,6 @@ def get_pers_cohort_density_peaks(
         raise KeyError(f"Missing '{value_col}' column in lab_values")
     if person_col not in cohorts.columns:
         raise KeyError(f"Missing '{person_col}' column in cohorts")
-
-    # Check cohorts has at least one row after header row
     if cohorts.shape[0] == 0:
         raise ValueError("Cohorts file must have at least one row.")
 
@@ -282,37 +201,21 @@ def get_pers_cohort_density_peaks(
 
 
 def compute_cohort_shifts(
-    measurements: pd.DataFrame,
+    lab_values: pd.DataFrame,
     cohorts: pd.DataFrame,
     *,
     person_col: str = "id",
     value_col: str = "value",
 ) -> pd.DataFrame:
-    """Compute the cohort-specific density shift for each person.
+    """Compute the shift in density between eaech person's cohort and the full
+    lab values dataset.
 
-    The shift is the difference between the full-cohort density peak and the
-    density peak of the cohort members listed for each person.
-
-    Parameters
-    ----------
-    measurements : pd.DataFrame
-        Measurements with a person-identifier column and a value column
-    cohorts : pd.DataFrame
-        Cohort membership table; the `person_col` column identifies the
-        person, and all other columns list that person's cohort members
-    person_col : str, optional
-        Name of the person-identifier column shared by both inputs, by default "id"
-    value_col : str, optional
-        Name of the value column in `measurements`, by default "value"
-
-    Returns
-    -------
-    shifts : pd.DataFrame
-        One row per person, with columns `person_col` and `shift`
+    The shift is calculated as the overall dataset peak minus the person's
+    cohort peak. Returns one row per person with columns `person_col` and `shift`.
     """
-    full_peak = get_all_density_peak(measurements, value_col=value_col)
+    full_peak = get_all_density_peak(lab_values, value_col=value_col)
     cohort_peaks = get_pers_cohort_density_peaks(
-        measurements, cohorts, person_col=person_col, value_col=value_col
+        lab_values, cohorts, person_col=person_col, value_col=value_col
     )
 
     rows: list[dict[str, Any]] = [

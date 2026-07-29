@@ -1,4 +1,4 @@
-"""Basic functional (end-to-end) tests for the pers_cohort_query pipeline.
+"""Basic functional (end-to-end) tests for pers_cohort_query.
 
 These tests read the fixture files under tests/data/input and run the full
 tool pipeline as if it were being run from the command line.

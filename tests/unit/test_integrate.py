@@ -1,3 +1,5 @@
+"""Unit tests for pers_cohort_query.integrate module."""
+
 from datetime import date
 
 from pers_cohort_query.integrate import (
