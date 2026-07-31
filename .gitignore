@@ -225,3 +225,7 @@ __marimo__/
 
 # Ignore data/ dir in case set by user
 data/
+
+# Ignore rendered .html in docs/
+docs/*.html
+docs/*_files/
