@@ -40,8 +40,8 @@ def write_small_data(
     lab_value_ids = set(subset_ids) | set(get_member_ids(cohorts_small, id_col))
     lab_values_small = lab_values.loc[lab_values[id_col].isin(lab_value_ids)]
 
-    cohorts_small.to_csv(output_dir / "cohorts_small.csv", index=False)
-    lab_values_small.to_csv(output_dir / "lab_values_small.csv", index=False)
+    cohorts_small.to_csv(output_dir / "cohorts_small.tsv", sep="\t", index=False)
+    lab_values_small.to_csv(output_dir / "lab_values_small.tsv", sep="\t", index=False)
 
 
 def main() -> None:
@@ -49,8 +49,8 @@ def main() -> None:
     input_dir = repo_root / "examples" / "input"
     output_dir = repo_root / "tests" / "data" / "input"
 
-    cohorts = pd.read_csv(input_dir / "cohorts.csv")
-    lab_values = pd.read_csv(input_dir / "lab_values.csv")
+    cohorts = pd.read_csv(input_dir / "cohorts.tsv", sep="\t", dtype=str)
+    lab_values = pd.read_csv(input_dir / "lab_values.tsv", sep="\t", dtype={"id": str})
 
     subset_ids = select_subset_ids(cohorts, N_SMALL)
     write_small_data(cohorts, lab_values, subset_ids, output_dir)
