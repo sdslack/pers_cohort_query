@@ -83,8 +83,8 @@ def main() -> None:
     lab_values = make_lab_values(ids, rng)
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    cohorts.to_csv(output_dir / "cohorts.csv", index=False)
-    lab_values.to_csv(output_dir / "lab_values.csv", index=False)
+    cohorts.to_csv(output_dir / "cohorts.tsv", sep="\t", index=False)
+    lab_values.to_csv(output_dir / "lab_values.tsv", sep="\t", index=False)
 
 
 if __name__ == "__main__":
