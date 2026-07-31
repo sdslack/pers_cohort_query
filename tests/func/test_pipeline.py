@@ -14,8 +14,8 @@ from pers_cohort_query.integrate import compute_cohort_shifts, load_query_inputs
 
 INPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "input"
 
-LAB_VALUES_PATH = INPUT_DIR / "lab_values_small.csv"
-COHORTS_PATH = INPUT_DIR / "cohorts_small.csv"
+LAB_VALUES_PATH = INPUT_DIR / "lab_values_small.tsv"
+COHORTS_PATH = INPUT_DIR / "cohorts_small.tsv"
 
 EXPECTED_SHIFTS = {
     "S001": pytest.approx(-4.211079, abs=1e-4),
@@ -38,7 +38,7 @@ def test_pipeline_computes_expected_shifts_from_small_fixtures():
 
 
 def test_cli_writes_output_file_from_small_fixtures(tmp_path):
-    output_path = tmp_path / "cohort_shifts_small.csv"
+    output_path = tmp_path / "cohort_shifts_small.tsv"
 
     main(
         [
@@ -52,7 +52,7 @@ def test_cli_writes_output_file_from_small_fixtures(tmp_path):
     )
 
     assert output_path.exists()
-    written = pd.read_csv(output_path, dtype={"id": str})
+    written = pd.read_csv(output_path, sep="\t", dtype={"id": str})
     assert list(written.columns) == ["id", "shift"]
     assert set(written["id"]) == set(EXPECTED_SHIFTS)
     for _, row in written.iterrows():

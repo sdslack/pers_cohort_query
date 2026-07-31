@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to write the output CSV file (default: %(default)s)",
     )
     parser.add_argument(
-        "--person-col",
+        "--id-col",
         default="id",
         help="Name of the person-identifier column shared by both inputs (default: %(default)s)",
     )
@@ -64,16 +64,28 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
 
+    paths = {
+        "--lab-values": args.lab_values.resolve(),
+        "--cohorts": args.cohorts.resolve(),
+        "--output": args.output.resolve(),
+    }
+    if len(set(paths.values())) != len(paths):
+        raise ValueError("Multiple input paths can't point to the same file.")
+
     lab_values, cohorts = load_query_inputs(
-        args.lab_values, args.cohorts, date_col=args.date_col
+        args.lab_values,
+        args.cohorts,
+        id_col=args.id_col,
+        date_col=args.date_col,
+        value_col=args.value_col,
     )
     shifts = compute_cohort_shifts(
-        lab_values, cohorts, person_col=args.person_col, value_col=args.value_col
+        lab_values, cohorts, id_col=args.id_col, value_col=args.value_col
     )
 
     output_dir = Path(args.output).parent
     output_dir.mkdir(parents=True, exist_ok=True)
-    shifts.to_csv(Path(args.output), index=False)
+    shifts.to_csv(Path(args.output), sep="\t", index=False)
     print(f"Wrote output to {args.output}")
 
 

@@ -11,72 +11,21 @@ import pandas as pd
 import scipy.stats
 
 
-def load_tabular_data(path: str | Path, *, date_col: str | None = None) -> pd.DataFrame:
-    """Load a CSV or TSV file into a DataFrame.
-
-    If `date_col` is provided, the column is validated and converted to
-    date-only format by discarding time information. Invalid dates raise an
-    error.
-    """
-
-    file_path = Path(path)
-    suffix = file_path.suffix.lower()
-    if suffix == ".tsv":
-        separator = "\t"
-    elif suffix == ".csv":
-        separator = ","
-    else:
-        raise ValueError(f"Unsupported file type: {suffix}.")
-
-    df = pd.read_csv(file_path, sep=separator, parse_dates=date_col)
-
-    # Validate dates and discard time information since downstream is date-based
-    if date_col is not None:
-        df[date_col] = pd.to_datetime(
-            df[date_col], errors="raise", format="mixed"
-        ).dt.date
-
-    return df
-
-
-def load_query_inputs(
-    lab_values_path: str | Path,
-    cohorts_path: str | Path,
+def validate_lab_values(
+    lab_values: pd.DataFrame,
     *,
+    id_col: str = "id",
     date_col: str = "date",
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Load and validate the lab values and cohort input tables.
+    value_col: str = "value",
+):
+    if lab_values.empty:
+        raise ValueError("Lab values file must have at least one row.")
 
-    Returns a lab values DataFrame with at least columns `id`, `date`, and
-    `value`, and a cohorts DataFrame with at least columns `id` and two or more
-    columns listing cohort members.
-    """
-    lab_values = load_tabular_data(lab_values_path, date_col=date_col)
-    cohorts = load_tabular_data(cohorts_path)
-
-    required_lab_columns = {"id", date_col, "value"}
+    required_lab_columns = {id_col, date_col, value_col}
     missing_lab_columns = required_lab_columns - set(lab_values.columns)
     if missing_lab_columns:
         raise KeyError(
             f"Missing required columns in lab values: {', '.join(missing_lab_columns)}"
-        )
-
-    required_cohort_columns = {"id"}
-    missing_cohort_columns = required_cohort_columns - set(cohorts.columns)
-    if missing_cohort_columns:
-        raise KeyError(
-            f"Missing required columns in cohorts: {', '.join(missing_cohort_columns)}"
-        )
-
-    if cohorts.columns[0] != "id":
-        raise ValueError(
-            "The first column of the cohorts file must be 'id', followed by "
-            "at least two cohort member columns."
-        )
-    if cohorts.shape[1] < 3:
-        raise ValueError(
-            "Cohorts file must have at least three columns: `id` and at least "
-            "two cohort members."
         )
 
     na_lab_columns = lab_values[list(required_lab_columns)].isna().any()
@@ -86,6 +35,34 @@ def load_query_inputs(
             f"{', '.join(na_lab_columns[na_lab_columns].index)}"
         )
 
+    try:
+        pd.to_datetime(lab_values[date_col], errors="raise", format="mixed")
+    except ValueError as e:
+        raise ValueError(f"Invalid date format in column '{date_col}': {e}") from e
+
+
+def validate_cohorts(
+    cohorts: pd.DataFrame,
+    *,
+    id_col: str = "id",
+):
+    if cohorts.empty:
+        raise ValueError("Cohorts file must have at least one row.")
+
+    required_cohort_columns = {id_col}
+    missing_cohort_columns = required_cohort_columns - set(cohorts.columns)
+    if missing_cohort_columns:
+        raise KeyError(
+            f"Missing required columns in cohorts: {', '.join(missing_cohort_columns)}"
+        )
+
+    member_columns = [col for col in cohorts.columns if col != id_col]
+    if len(member_columns) < 2:
+        raise ValueError(
+            "Cohorts file must have at least two member columns in addition to"
+            "the `id_col` column."
+        )
+
     na_cohort_columns = cohorts.isna().any()
     if na_cohort_columns.any():
         raise ValueError(
@@ -93,10 +70,48 @@ def load_query_inputs(
             f"{', '.join(na_cohort_columns[na_cohort_columns].index)}"
         )
 
-    lab_ids = set(lab_values["id"].astype(str))
-    cohort_member_columns = [column for column in cohorts.columns if column != "id"]
-    cohort_ids = set(cohorts["id"].astype(str)) | set(
-        cohorts[cohort_member_columns].astype(str).to_numpy().ravel()
+    if cohorts[id_col].duplicated().any():
+        raise ValueError(
+            "Cohorts cannot contain duplicate values in the `id_col` column."
+        )
+
+    for _, row in cohorts.iterrows():
+        person_id = row[id_col]
+        if person_id in row[member_columns].tolist():
+            raise ValueError(f"Person '{person_id}' is in their own cohort.")
+
+
+def load_query_inputs(
+    lab_values_path: str | Path,
+    cohorts_path: str | Path,
+    *,
+    id_col: str = "id",
+    date_col: str = "date",
+    value_col: str = "value",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load and validate the lab values and cohort input TSV files, ensuring
+    the same individuals are in both.
+
+    Returns a lab values DataFrame with at least columns `id_col`, `date_col`,
+    and `value`, and a cohorts DataFrame with at least columns `id_col` and two
+    or more columns listing cohort members.
+    """
+    lab_values = pd.read_csv(lab_values_path, sep="\t", dtype={id_col: str})
+    validate_lab_values(
+        lab_values, id_col=id_col, date_col=date_col, value_col=value_col
+    )
+    cohorts = pd.read_csv(cohorts_path, sep="\t", dtype=str)
+    validate_cohorts(cohorts, id_col=id_col)
+
+    # Remove time information since downstream only uses dates
+    lab_values[date_col] = pd.to_datetime(
+        lab_values[date_col], errors="raise", format="mixed"
+    ).dt.date
+
+    lab_ids = set(lab_values[id_col])
+    cohort_member_columns = [column for column in cohorts.columns if column != id_col]
+    cohort_ids = set(cohorts[id_col]) | set(
+        cohorts[cohort_member_columns].to_numpy().ravel()
     )
     missing_in_lab = cohort_ids - lab_ids
     if missing_in_lab:
@@ -144,16 +159,13 @@ def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
 
 
 def get_all_density_peak(lab_values: pd.DataFrame, value_col: str = "value") -> float:
-    if value_col not in lab_values.columns:
-        raise KeyError(f"Missing '{value_col}' column in lab_values")
-
     return get_density_peak(lab_values[value_col])
 
 
 def get_pers_cohort_density_peaks(
     lab_values: pd.DataFrame,
     cohorts: pd.DataFrame,
-    person_col: str = "id",
+    id_col: str = "id",
     value_col: str = "value",
 ) -> dict[str, float]:
     """Compute density peaks for each person's pooled cohort lab values.
@@ -161,31 +173,22 @@ def get_pers_cohort_density_peaks(
     For each person in `cohorts`, all lab values from their listed cohort
     members are used to compute a single density peak.
     """
-    if person_col not in lab_values.columns:
-        raise KeyError(f"Missing '{person_col}' column in lab_values")
-    if value_col not in lab_values.columns:
-        raise KeyError(f"Missing '{value_col}' column in lab_values")
-    if person_col not in cohorts.columns:
-        raise KeyError(f"Missing '{person_col}' column in cohorts")
-    if cohorts.shape[0] == 0:
-        raise ValueError("Cohorts file must have at least one row.")
-
-    member_columns = [column for column in cohorts.columns if column != person_col]
+    member_columns = [column for column in cohorts.columns if column != id_col]
     people_values: dict[str, list[float]] = {
-        str(person_id): group.tolist()
-        for person_id, group in lab_values.groupby(person_col)[value_col]
+        person_id: group.tolist()
+        for person_id, group in lab_values.groupby(id_col)[value_col]
     }
 
     peaks: dict[str, float] = {}
     for _, cohort_row in cohorts.iterrows():
-        person_id = str(cohort_row[person_col])
-        if str(person_id) in cohort_row[member_columns].astype(str).tolist():
+        person_id = cohort_row[id_col]
+        if person_id in cohort_row[member_columns].tolist():
             raise ValueError(f"Person '{person_id}' is in their own cohort.")
         if cohort_row[member_columns].isna().any():
             raise ValueError(
                 f"Cohort members for person '{person_id}' contain missing values."
             )
-        cohort_members = [str(member) for member in cohort_row[member_columns].tolist()]
+        cohort_members = [member for member in cohort_row[member_columns].tolist()]
         cohort_values: list[float] = []
         for member in cohort_members:
             if member not in people_values:
@@ -204,22 +207,22 @@ def compute_cohort_shifts(
     lab_values: pd.DataFrame,
     cohorts: pd.DataFrame,
     *,
-    person_col: str = "id",
+    id_col: str = "id",
     value_col: str = "value",
 ) -> pd.DataFrame:
     """Compute the shift in density between eaech person's cohort and the full
     lab values dataset.
 
     The shift is calculated as the overall dataset peak minus the person's
-    cohort peak. Returns one row per person with columns `person_col` and `shift`.
+    cohort peak. Returns one row per person with columns `id_col` and `shift`.
     """
     full_peak = get_all_density_peak(lab_values, value_col=value_col)
     cohort_peaks = get_pers_cohort_density_peaks(
-        lab_values, cohorts, person_col=person_col, value_col=value_col
+        lab_values, cohorts, id_col=id_col, value_col=value_col
     )
 
     rows: list[dict[str, Any]] = [
-        {person_col: person_id, "shift": full_peak - cohort_peak}
+        {id_col: person_id, "shift": full_peak - cohort_peak}
         for person_id, cohort_peak in cohort_peaks.items()
     ]
     return pd.DataFrame(rows)
