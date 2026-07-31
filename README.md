@@ -29,8 +29,8 @@ cohort. Column one should be called `id` (or passed with `id_col`), and is the
 ID of an individual, and columns 2-(N+1) are that individual's personalized
 cohort members, any column names are accepted.
 
-+ All cohorts must be the same size, and the number of members must be at
-    least 2.
++ All cohorts must contain the same number of individuals, and the number of
+    members must be at least 2.
 + There can be no missing values in the input file.
 + This can be generated from GenoSiS or using PCA.
 + An individual cannot be in their own cohort, and each individual can only
