@@ -11,6 +11,32 @@ import pandas as pd
 import scipy.stats
 
 
+def _validate_not_empty(df: pd.DataFrame, name: str) -> None:
+    if df.empty:
+        raise ValueError(f"{name} file must have at least one row.")
+
+
+def _validate_required_columns(
+    df: pd.DataFrame, required_columns: set[str], name: str
+) -> None:
+    missing_columns = required_columns - set(df.columns)
+    if missing_columns:
+        raise KeyError(
+            f"{name} is missing required columns: {', '.join(sorted(missing_columns))}"
+        )
+
+
+def _validate_no_missing_values(
+    df: pd.DataFrame, required_columns: set[str], name: str
+) -> None:
+    na_columns = df[list(required_columns)].isna().any()
+    if na_columns.any():
+        raise ValueError(
+            f"{name} contain missing values in required columns: "
+            f"{', '.join(na_columns[na_columns].index)}"
+        )
+
+
 def validate_lab_values(
     lab_values: pd.DataFrame,
     *,
@@ -18,22 +44,10 @@ def validate_lab_values(
     date_col: str = "date",
     value_col: str = "value",
 ):
-    if lab_values.empty:
-        raise ValueError("Lab values file must have at least one row.")
-
-    required_lab_columns = {id_col, date_col, value_col}
-    missing_lab_columns = required_lab_columns - set(lab_values.columns)
-    if missing_lab_columns:
-        raise KeyError(
-            f"Missing required columns in lab values: {', '.join(missing_lab_columns)}"
-        )
-
-    na_lab_columns = lab_values[list(required_lab_columns)].isna().any()
-    if na_lab_columns.any():
-        raise ValueError(
-            "Lab values contain missing values in required columns: "
-            f"{', '.join(na_lab_columns[na_lab_columns].index)}"
-        )
+    _validate_not_empty(lab_values, "Lab values")
+    required_columns = {id_col, date_col, value_col}
+    _validate_required_columns(lab_values, required_columns, "Lab values")
+    _validate_no_missing_values(lab_values, required_columns, "Lab values")
 
     try:
         pd.to_datetime(lab_values[date_col], errors="raise", format="mixed")
@@ -46,28 +60,17 @@ def validate_cohorts(
     *,
     id_col: str = "id",
 ):
-    if cohorts.empty:
-        raise ValueError("Cohorts file must have at least one row.")
+    _validate_not_empty(cohorts, "Cohorts")
 
-    required_cohort_columns = {id_col}
-    missing_cohort_columns = required_cohort_columns - set(cohorts.columns)
-    if missing_cohort_columns:
-        raise KeyError(
-            f"Missing required columns in cohorts: {', '.join(missing_cohort_columns)}"
-        )
+    required_columns = {id_col}
+    _validate_required_columns(cohorts, required_columns, "Cohorts")
+    _validate_no_missing_values(cohorts, cohorts.columns, "Cohorts")
 
     member_columns = [col for col in cohorts.columns if col != id_col]
     if len(member_columns) < 2:
         raise ValueError(
             "Cohorts file must have at least two member columns in addition to"
             "the `id_col` column."
-        )
-
-    na_cohort_columns = cohorts.isna().any()
-    if na_cohort_columns.any():
-        raise ValueError(
-            "Cohorts contain missing values in columns: "
-            f"{', '.join(na_cohort_columns[na_cohort_columns].index)}"
         )
 
     if cohorts[id_col].duplicated().any():

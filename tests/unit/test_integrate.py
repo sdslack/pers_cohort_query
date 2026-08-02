@@ -42,7 +42,7 @@ def test_validate_lab_values_raises_error_for_invalid_date_column():
     )
     with pytest.raises(
         KeyError,
-        match="Missing required columns in lab values",
+        match="Lab values is missing required columns",
     ):
         validate_lab_values(lab_values, date_col="nonexistent_col")
 
@@ -89,7 +89,7 @@ def test_validate_lab_values_raises_error_for_missing_required_columns():
     )
     with pytest.raises(
         KeyError,
-        match="Missing required columns in lab values",
+        match="Lab values is missing required columns",
     ):
         validate_lab_values(lab_values)
 
@@ -164,7 +164,7 @@ def test_validate_cohorts_raises_error_for_missing_required_columns():
     )
     with pytest.raises(
         KeyError,
-        match="Missing required columns in cohorts",
+        match="Cohorts is missing required columns",
     ):
         validate_cohorts(cohorts)
 
@@ -193,7 +193,7 @@ def test_validate_cohorts_raises_error_for_missing_values_in_columns():
     )
     with pytest.raises(
         ValueError,
-        match="Cohorts contain missing values in columns",
+        match="Cohorts contain missing values in required columns",
     ):
         validate_cohorts(cohorts)
 
@@ -266,7 +266,7 @@ def test_load_query_inputs_raises_error_if_error_in_lab_values(tmp_path):
 
     with pytest.raises(
         KeyError,
-        match="Missing required columns in lab values",
+        match="Lab values is missing required columns",
     ):
         load_query_inputs(lab_values_file, cohorts_file)
 
@@ -280,7 +280,7 @@ def test_load_query_inputs_raises_error_if_error_in_cohorts(tmp_path):
 
     with pytest.raises(
         KeyError,
-        match="Missing required columns in cohorts",
+        match="Cohorts is missing required columns",
     ):
         load_query_inputs(lab_values_file, cohorts_file)
 
@@ -390,7 +390,7 @@ def test_load_query_inputs_raises_error_for_invalid_custom_column_names(tmp_path
 
     with pytest.raises(
         KeyError,
-        match="Missing required columns in lab values",
+        match="Lab values is missing required columns",
     ):
         load_query_inputs(
             lab_values_file,
@@ -410,7 +410,7 @@ def test_load_query_inputs_raises_error_for_mismatched_id_column_names(tmp_path)
 
     with pytest.raises(
         KeyError,
-        match="Missing required columns in cohorts",
+        match="Cohorts is missing required columns",
     ):
         load_query_inputs(lab_values_file, cohorts_file)
 
