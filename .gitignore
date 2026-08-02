@@ -224,7 +224,7 @@ __marimo__/
 .vscode/
 
 # Ignore data/ dir in case set by user
-data/
+/data/
 
 # Ignore rendered .html in docs/
 docs/*.html
