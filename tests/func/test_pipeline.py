@@ -10,7 +10,8 @@ import pandas as pd
 import pytest
 
 from pers_cohort_query.cli import main
-from pers_cohort_query.integrate import compute_cohort_shifts, load_query_inputs
+from pers_cohort_query.io import load_query_inputs
+from pers_cohort_query.integrate import compute_cohort_shifts
 
 INPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "input"
 

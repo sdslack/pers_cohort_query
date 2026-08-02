@@ -4,7 +4,8 @@ import argparse
 from pathlib import Path
 from importlib.metadata import version
 
-from .integrate import compute_cohort_shifts, load_query_inputs
+from .io import load_query_inputs
+from .integrate import compute_cohort_shifts
 
 
 def build_parser() -> argparse.ArgumentParser:
