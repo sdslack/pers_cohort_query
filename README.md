@@ -23,6 +23,7 @@ values has already been done.
 + Dates should be in ISO 8601 format (e.g., YYYY-MM-DD or YYYY-MM-DD HH:MM:SS).
 + There can be no missing values in any of the three columns.
 + An individual can have multiple lab values.
++ Lab values must be numeric, and any non-numeric values will raise an error.
 
 2. a TSV file with personalized cohort definitions, where each row is a
 cohort. Column one should be called `id` (or passed with `id_col`), and is the
@@ -44,7 +45,7 @@ that row (i.e., an individual cannot be in their own cohort).
 It outputs a TSV file with two columns:
 
 + individual ID
-+ persoanlized cohort shift in lab value relative to the population-level
++ personalized cohort shift in lab value relative to the population-level
     reference range
 
 ## Installation
@@ -60,7 +61,7 @@ pip install .
 
 ```
 
-**Note:** The repository includes example input files in `data/input/` that are
+**Note:** The repository includes example input files in `examples/input/` that are
 used in the example usage below.
 
 
@@ -78,7 +79,7 @@ pers-cohort-query \
 ```
 
 **Note:** The `data/` directory is ignored by git, so it can be used to store
-your own input files (`data/input/`) and output files (`data/output/`).
+your own private input files and output files.
 
 ## Development
 

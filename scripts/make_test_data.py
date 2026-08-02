@@ -29,9 +29,9 @@ def write_small_data(
     id_col: str = "id",
 ) -> None:
     """
-    Write a subset of cohort and value values data for testing.
+    Write a subset of cohort and lab values data for testing.
 
-    Includes cohort rows for `subset_ids` and alb values for those IDs as well
+    Includes cohort rows for `subset_ids` and lab values for those IDs as well
     as their cohort members.
     """
     output_dir.mkdir(parents=True, exist_ok=True)

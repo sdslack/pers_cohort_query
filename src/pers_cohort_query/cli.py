@@ -34,8 +34,8 @@ def build_parser() -> argparse.ArgumentParser:
         "-o",
         "--output",
         type=Path,
-        default=Path("data/output/cohort_shifts.csv"),
-        help="Path to write the output CSV file (default: %(default)s)",
+        default=Path("data/output/cohort_shifts.tsv"),
+        help="Path to write the output TSV file (default: %(default)s)",
     )
     parser.add_argument(
         "--id-col",

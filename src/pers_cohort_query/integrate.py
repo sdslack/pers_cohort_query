@@ -99,7 +99,7 @@ def compute_cohort_shifts(
     id_col: str = "id",
     value_col: str = "value",
 ) -> pd.DataFrame:
-    """Compute the shift in density between eaech person's cohort and the full
+    """Compute the shift in density between each person's cohort and the full
     lab values dataset.
 
     The shift is calculated as the overall dataset peak minus the person's
