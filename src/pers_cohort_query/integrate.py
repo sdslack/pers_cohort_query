@@ -65,13 +65,14 @@ def get_pers_cohort_density_peaks(
     peaks: dict[str, float] = {}
     for _, cohort_row in cohorts.iterrows():
         person_id = cohort_row[id_col]
-        if person_id in cohort_row[member_columns].tolist():
+        members = cohort_row[member_columns]
+        cohort_members = members.tolist()
+        if person_id in cohort_members:
             raise ValueError(f"Person '{person_id}' is in their own cohort.")
-        if cohort_row[member_columns].isna().any():
+        if members.isna().any():
             raise ValueError(
                 f"Cohort members for person '{person_id}' contain missing values."
             )
-        cohort_members = [member for member in cohort_row[member_columns].tolist()]
         cohort_values: list[float] = []
         for member in cohort_members:
             if member not in people_values:
