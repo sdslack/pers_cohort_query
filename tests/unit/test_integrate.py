@@ -86,23 +86,6 @@ def test_get_pers_cohort_density_peaks_example():
     assert all(isinstance(peak, float) for peak in pers_peaks.values())
 
 
-def test_get_pers_cohort_density_peaks_missing_person_in_lab_values():
-    lab_values = pd.DataFrame(
-        {"id": ["1", "2"], "date": ["2020-01-01", "2020-01-02"], "value": [10.0, 20.0]}
-    )
-
-    cohorts = pd.DataFrame(
-        {
-            "id": ["1"],
-            "member_1": ["2"],
-            "member_2": ["3"],
-        }
-    )
-
-    with pytest.raises(ValueError, match="Missing lab values for person"):
-        get_pers_cohort_density_peaks(lab_values, cohorts)
-
-
 def test_get_pers_cohort_density_peaks_extra_person_in_lab_values():
     lab_values = pd.DataFrame(
         {
@@ -119,42 +102,6 @@ def test_get_pers_cohort_density_peaks_extra_person_in_lab_values():
     assert isinstance(pers_peaks, dict)
     assert set(pers_peaks.keys()) == {"1"}
     assert all(isinstance(peak, float) for peak in pers_peaks.values())
-
-
-def test_get_pers_cohort_density_peaks_person_in_own_cohort():
-    lab_values = pd.DataFrame(
-        {"id": ["1", "2"], "date": ["2020-01-01", "2020-01-02"], "value": [10.0, 20.0]}
-    )
-
-    cohorts = pd.DataFrame(
-        {
-            "id": ["1"],
-            "member_1": ["1"],
-            "member_2": ["2"],
-        }
-    )
-
-    with pytest.raises(ValueError, match=r"Person '1' is in their own cohort\."):
-        get_pers_cohort_density_peaks(lab_values, cohorts)
-
-
-def test_get_pers_cohort_density_peaks_missing_cohort_member():
-    lab_values = pd.DataFrame(
-        {"id": ["1", "2"], "date": ["2020-01-01", "2020-01-02"], "value": [10.0, 20.0]}
-    )
-
-    cohorts = pd.DataFrame(
-        {
-            "id": ["1"],
-            "member_1": ["2"],
-            "member_2": [None],
-        }
-    )
-
-    with pytest.raises(
-        ValueError, match=r"Cohort members for person '1' contain missing values\."
-    ):
-        get_pers_cohort_density_peaks(lab_values, cohorts)
 
 
 def test_get_pers_cohort_density_peaks_zero_variance_cohort_is_nan(caplog):

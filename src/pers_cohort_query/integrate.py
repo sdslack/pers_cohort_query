@@ -66,8 +66,8 @@ def get_pers_cohort_density_peaks(
     members are used to compute a single density peak.
     """
     member_columns = [column for column in cohorts.columns if column != id_col]
-    people_values: dict[str, list[float]] = {
-        person_id: group.tolist()
+    people_values: dict[str, np.ndarray] = {
+        person_id: group.to_numpy()
         for person_id, group in lab_values.groupby(id_col)[value_col]
     }
 
@@ -76,20 +76,9 @@ def get_pers_cohort_density_peaks(
         person_id = cohort_row[id_col]
         members = cohort_row[member_columns]
         cohort_members = members.tolist()
-        if person_id in cohort_members:
-            raise ValueError(f"Person '{person_id}' is in their own cohort.")
-        if members.isna().any():
-            raise ValueError(
-                f"Cohort members for person '{person_id}' contain missing values."
-            )
-        cohort_values: list[float] = []
-        for member in cohort_members:
-            if member not in people_values:
-                raise ValueError(
-                    f"Missing lab values for person '{member}', "
-                    f"a cohort member of person '{person_id}'."
-                )
-            cohort_values.extend(people_values[member])
+        cohort_values = np.concatenate(
+            [people_values[member] for member in cohort_members]
+        )
 
         try:
             peaks[person_id] = get_density_peak(cohort_values)

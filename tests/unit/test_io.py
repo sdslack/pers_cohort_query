@@ -253,6 +253,21 @@ def test_validate_cohorts_raises_error_for_duplicate_ids():
         validate_cohorts(cohorts)
 
 
+def test_validate_cohorts_raises_error_for_repeated_cohort_member():
+    cohorts = pd.DataFrame(
+        {
+            "id": [1, 2],
+            "member_1": [2, 3],
+            "member_2": [2, 4],
+        }
+    )
+    with pytest.raises(
+        ValueError,
+        match="Cohort members cannot be repeated within a single cohort",
+    ):
+        validate_cohorts(cohorts)
+
+
 # endregion
 
 # region: tests for load_query_inputs

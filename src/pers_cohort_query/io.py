@@ -89,8 +89,14 @@ def validate_cohorts(
 
     for _, row in cohorts.iterrows():
         person_id = row[id_col]
-        if person_id in row[member_columns].tolist():
+        members = row[member_columns].tolist()
+        if person_id in members:
             raise ValueError(f"Person '{person_id}' is in their own cohort.")
+
+        if len(members) != len(set(members)):
+            raise ValueError(
+                "Cohort members cannot be repeated within a single cohort."
+            )
 
 
 def load_query_inputs(
