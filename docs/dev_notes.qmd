@@ -11,10 +11,11 @@ format:
 ## pers_cohort_query modules {.smaller}
 
 - **module: extract** lab values and cohorts from a database
-  - *module to be developed next?*
+  - *module to be developed next*
 - **module: integrate** lab values and cohorts to compute personalized cohort shifts
   - *only module currently developed & reviewed*
 - **module: summarize** shifts at personalize and population level (?)
+  - *skeleton to be added next, then hold off until after extract module*
 
 ## integrate module review {.smaller}
 
@@ -25,14 +26,14 @@ format:
   - refactor to separate loading and validation
   - factor validation patterns to functions
   - separate modules into io.py, etc.
+  - enforce lab values numeric and finite
+  - return NaN for zero variance instead of throwing error
+  - small optimizations while keeping pandas
 
 ## integrate module review {.smaller}
 
 - **to do:**
-  - output more than just shift peak
-  - re-visit get_density_peak error when no variance
-  - add checks for "<5" or "inf" values
-  - small optimizations while keeping pandas
+  - output more than just shift peak (separate PR)
 
 ## integrate module review {.smaller}
 
@@ -41,7 +42,8 @@ format:
   - should KDE shift be used for all inputs?
   - how to correctly account for the longitudinal data?
   - gaurd against one extreme value shifting entire cohort by a constant?
-  - date not used in this module...?
+  - should exact duplicate rows be allowed in input? (currently yes)
+  - does GenoSiS require same cohort length, pad, or fail?
 
 ## integrate module review {.smaller}
 
