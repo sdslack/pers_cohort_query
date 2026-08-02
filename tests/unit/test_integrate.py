@@ -5,7 +5,9 @@ from pers_cohort_query.integrate import (
     get_density_peak,
     get_pers_cohort_density_peaks,
     compute_cohort_shifts,
+    ZeroVarianceError,
 )
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -32,6 +34,11 @@ def test_get_density_peak_empty_raises():
 def test_get_density_peak_nan_raises():
     with pytest.raises(ValueError, match="NaN"):
         get_density_peak([1.0, float("nan"), 3.0])
+
+
+def test_get_density_peak_zero_variance_raises():
+    with pytest.raises(ZeroVarianceError, match="identical"):
+        get_density_peak([5.0, 5.0, 5.0])
 
 
 # endregion
@@ -148,6 +155,24 @@ def test_get_pers_cohort_density_peaks_missing_cohort_member():
         ValueError, match=r"Cohort members for person '1' contain missing values\."
     ):
         get_pers_cohort_density_peaks(lab_values, cohorts)
+
+
+def test_get_pers_cohort_density_peaks_zero_variance_cohort_is_nan(caplog):
+    lab_values = pd.DataFrame(
+        {
+            "id": ["1", "2", "3"],
+            "date": ["2020-01-01", "2020-01-02", "2020-01-03"],
+            "value": [10.0, 20.0, 20.0],
+        }
+    )
+
+    cohorts = pd.DataFrame({"id": ["1"], "member_1": ["2"], "member_2": ["3"]})
+
+    with caplog.at_level("WARNING"):
+        pers_peaks = get_pers_cohort_density_peaks(lab_values, cohorts)
+
+    assert np.isnan(pers_peaks["1"])
+    assert "zero variance" in caplog.text
 
 
 # endregion

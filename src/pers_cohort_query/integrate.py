@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
 import scipy.stats
+
+logger = logging.getLogger(__name__)
+
+
+class ZeroVarianceError(ValueError):
+    """Raised when density peak estimation is attempted on constant values."""
 
 
 def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
@@ -18,8 +25,8 @@ def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
     evaluated on an evenly spaced grid with 512 points. Bandwidth and grid size
     match the R implementation of this function.
 
-    Raises a ValueError if values are empty, contain NaNs, contain fewer than
-    two values, or have zero variance.
+    Raises a ValueError if values are empty, contain NaNs, or contain fewer
+    than two values. Raises a ZeroVarianceError if all values are identical.
     """
     values = np.asarray(values, dtype=float)
 
@@ -33,7 +40,9 @@ def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
         )
     # scipy.stats.gaussian_kde cannot estimate a density when input variance is zero
     if np.isclose(np.std(values), 0):
-        raise ValueError("Cannot compute density peak: all values are identical.")
+        raise ZeroVarianceError(
+            "Cannot compute density peak: all values are identical."
+        )
 
     kde = scipy.stats.gaussian_kde(values, bw_method="silverman")
     x_vals = np.linspace(values.min(), values.max(), 512)
@@ -82,7 +91,14 @@ def get_pers_cohort_density_peaks(
                 )
             cohort_values.extend(people_values[member])
 
-        peaks[person_id] = get_density_peak(cohort_values)
+        try:
+            peaks[person_id] = get_density_peak(cohort_values)
+        except ZeroVarianceError:
+            logger.warning(
+                "Cohort for person '%s' has zero variance; setting peak to NaN.",
+                person_id,
+            )
+            peaks[person_id] = np.nan
 
     return peaks
 
