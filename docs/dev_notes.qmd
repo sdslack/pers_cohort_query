@@ -23,16 +23,16 @@ format:
   - fix bugs (custom column names, edge cases)
   - comment why instead of what, limit docstrings
   - refactor to separate loading and validation
+  - factor validation patterns to functions
+  - separate modules into io.py, etc.
 
 ## integrate module review {.smaller}
 
 - **to do:**
-  - separate modules into io.py, etc.
   - output more than just shift peak
   - re-visit get_density_peak error when no variance
   - add checks for "<5" or "inf" values
   - small optimizations while keeping pandas
-  - factor validation repeated pattern to function?
 
 ## integrate module review {.smaller}
 

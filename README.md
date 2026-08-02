@@ -114,12 +114,3 @@ pip install -e ".[dev]"
 pre-commit install
 
 ```
-
-## Development TODOs
-
-+ Need to revisit how to handle longitudinal data
-+ Likely want to revisit get_density_peak and save more than just peak - maybe
-    object with peak, mean, stdev?
-+ Need to add more tests? For example, for function like
-    get_pers_cohort_density_peaks, do I need to test invalid date input, or
-    okay to assume that and similar tests run upstream by other functions?
