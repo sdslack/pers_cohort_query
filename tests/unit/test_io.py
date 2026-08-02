@@ -131,6 +131,27 @@ def test_validate_lab_values_accepts_custom_column_names(id_col, date_col, value
     )
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        "<10",
+        "inf",
+        "NaN",
+        "not_a_number",
+    ],
+)
+def test_validate_lab_values_raises_error_for_non_numeric_values(value):
+    lab_values = pd.DataFrame(
+        {
+            "id": [1, 2],
+            "date": ["2020-01-01", "2020-01-02"],
+            "value": [10, value],
+        }
+    )
+    with pytest.raises(ValueError, match="must contain only finite numeric values"):
+        validate_lab_values(lab_values)
+
+
 # endregion
 
 # region tests for validate_cohorts

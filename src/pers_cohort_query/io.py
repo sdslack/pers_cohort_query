@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 
 def _validate_not_empty(df: pd.DataFrame, name: str) -> None:
@@ -49,6 +50,18 @@ def validate_lab_values(
         pd.to_datetime(lab_values[date_col], errors="raise", format="mixed")
     except ValueError as e:
         raise ValueError(f"Invalid date format in column '{date_col}': {e}") from e
+
+    try:
+        values = pd.to_numeric(lab_values[value_col], errors="raise")
+    except ValueError as e:
+        raise ValueError(
+            f"Column '{value_col}' must contain only finite numeric values."
+        ) from e
+
+    if not np.isfinite(values).all():
+        raise ValueError(
+            f"Column '{value_col}' must contain only finite numeric values."
+        )
 
 
 def validate_cohorts(
