@@ -40,14 +40,17 @@ def validate_lab_values(
     id_col: str = "id",
     date_col: str = "date",
     value_col: str = "value",
-):
+) -> tuple[pd.Series, pd.Series]:
+    """Validate the lab values DataFrame, returning the parsed `date_col` and
+    `value_col` columns.
+    """
     _validate_not_empty(lab_values, "Lab values")
     required_columns = {id_col, date_col, value_col}
     _validate_required_columns(lab_values, required_columns, "Lab values")
     _validate_no_missing_values(lab_values, required_columns, "Lab values")
 
     try:
-        pd.to_datetime(lab_values[date_col], errors="raise", format="mixed")
+        dates = pd.to_datetime(lab_values[date_col], errors="raise", format="mixed")
     except ValueError as e:
         raise ValueError(f"Invalid date format in column '{date_col}': {e}") from e
 
@@ -62,6 +65,8 @@ def validate_lab_values(
         raise ValueError(
             f"Column '{value_col}' must contain only finite numeric values."
         )
+
+    return dates, values
 
 
 def validate_cohorts(
@@ -87,16 +92,18 @@ def validate_cohorts(
             "Cohorts cannot contain duplicate values in the `id_col` column."
         )
 
-    for _, row in cohorts.iterrows():
-        person_id = row[id_col]
-        members = row[member_columns].tolist()
-        if person_id in members:
-            raise ValueError(f"Person '{person_id}' is in their own cohort.")
+    member_values = cohorts[member_columns].to_numpy()
+    id_values = cohorts[[id_col]].to_numpy()
 
-        if len(members) != len(set(members)):
-            raise ValueError(
-                "Cohort members cannot be repeated within a single cohort."
-            )
+    self_membership = (member_values == id_values).any(axis=1)
+    if self_membership.any():
+        bad_id = cohorts.loc[self_membership, id_col].iloc[0]
+        raise ValueError(f"Person '{bad_id}' is in their own cohort.")
+
+    sorted_members = np.sort(member_values, axis=1)
+    has_duplicates = (sorted_members[:, :-1] == sorted_members[:, 1:]).any(axis=1)
+    if has_duplicates.any():
+        raise ValueError("Cohort members cannot be repeated within a single cohort.")
 
 
 def load_query_inputs(
@@ -111,20 +118,19 @@ def load_query_inputs(
     the same individuals are in both.
 
     Returns a lab values DataFrame with at least columns `id_col`, `date_col`,
-    and `value`, and a cohorts DataFrame with at least columns `id_col` and two
+    and `value_col`, and a cohorts DataFrame with at least columns `id_col` and two
     or more columns listing cohort members.
     """
     lab_values = pd.read_csv(lab_values_path, sep="\t", dtype={id_col: str})
-    validate_lab_values(
+    parsed_dates, parsed_values = validate_lab_values(
         lab_values, id_col=id_col, date_col=date_col, value_col=value_col
     )
     cohorts = pd.read_csv(cohorts_path, sep="\t", dtype=str)
     validate_cohorts(cohorts, id_col=id_col)
 
     # Remove time information since downstream only uses dates
-    lab_values[date_col] = pd.to_datetime(
-        lab_values[date_col], errors="raise", format="mixed"
-    ).dt.date
+    lab_values[date_col] = parsed_dates.dt.date
+    lab_values[value_col] = parsed_values
 
     lab_ids = set(lab_values[id_col])
     cohort_member_columns = [column for column in cohorts.columns if column != id_col]
