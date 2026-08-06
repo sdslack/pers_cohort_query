@@ -16,33 +16,75 @@ implementation handles only the data integration stage.
 The first version of this tool handles only the data integration stage.
 It requires two input files:
 
-1. a CSV/TSV file with lab values, in columns: `id`, `date`, `value`. Assumes
-that filtering of the lab values has already been done.
+1. a TSV file with lab values, in columns: `id`, `date`, `value` (or passed
+with `id_col`, `date_col`, and `value_col`). Assumes that filtering of the lab
+values has already been done.
 
 + Dates should be in ISO 8601 format (e.g., YYYY-MM-DD or YYYY-MM-DD HH:MM:SS).
 + There can be no missing values in any of the three columns.
++ An individual can have multiple lab values.
++ Lab values must be numeric, and any non-numeric values will raise an error.
 
-2. a CSV/TSV file with personalized cohort definitions, where each row is a
-cohort. Column one should be called `id` and is the ID of an individual, and
-columns 2-(N+1) are that individual's personalized cohort members, any column
-names are accepted.
+2. a TSV file with personalized cohort definitions, where each row is a
+cohort. Column one should be called `id` (or passed with `id_col`), and is the
+ID of an individual, and columns 2-(N+1) are that individual's personalized
+cohort members, any column names are accepted.
 
-+ All cohorts must be the same size, and the number of members must be at
-    least 2.
++ All cohorts must contain the same number of individuals, and the number of
+    members must be at least 2.
 + There can be no missing values in the input file.
 + This can be generated from GenoSiS or using PCA.
++ An individual cannot be in their own cohort, and each individual can only
+    have one personalized cohort (no duplicates in the first column).
 
-Note that the same set of individuals must be present in both input files, and
-the individual ID in the first column of the cohorts file cannot be present in
-the rest of that row (i.e., an individual cannot be in their own cohort).
+Note that the same set of individuals must be present in both input files with
+the same ID format and column name as given with `id_col`, and the individual
+ID in the first column of the cohorts file cannot be present in the rest of
+that row (i.e., an individual cannot be in their own cohort).
 
 It outputs a TSV file with two columns:
 
 + individual ID
-+ persoanlized cohort shift in lab value relative to the population-level
++ personalized cohort shift in lab value relative to the population-level
     reference range
 
-## Setup
+## Installation
+
+### From Source
+
+Clone the repository and install the package:
+
+```bash
+git clone git@github.com:sdslack/pers_cohort_query.git
+cd pers_cohort_query
+pip install .
+
+```
+
+**Note:** The repository includes example input files in `examples/input/` that are
+used in the example usage below.
+
+
+## Example Usage
+
+The repository includes example input files in `examples/input/` and an example
+output file in `examples/output/`. To run the tool:
+
+```bash
+pers-cohort-query \
+    --lab-values examples/input/lab_values.tsv \
+    --cohorts examples/input/cohorts.tsv \
+    --output examples/output/cohort_shifts.tsv
+
+```
+
+**Note:** The `data/` directory is ignored by git, so it can be used to store
+your own private input files and output files.
+
+## Development
+
+To contribute to the project or modify the source code, create the development
+environment and install the package in editable mode:
 
 1. Clone and enter this repo:
 
@@ -73,28 +115,3 @@ pip install -e ".[dev]"
 pre-commit install
 
 ```
-
-## Example Usage
-
-The repository includes example input files in `data/input/` and an example
-output file in `data/output/`. To run the tool, use the following command:
-
-```bash
-mamba activate pers_cohort_query
-pip install .
-
-python pers-cohort-query \
-    --lab-values data/input/lab_values.csv \
-    --cohorts data/input/cohorts.csv \
-    --output data/output/cohort_shifts.tsv
-
-```
-
-## Development TODOs
-
-+ Need to revisit how to handle longitudinal data
-+ Likely want to revisit get_density_peak and save more than just peak - maybe
-    object with peak, mean, stdev?
-+ Need to add more tests? For example, for function like
-    get_pers_cohort_density_peaks, do I need to test invalid date input, or
-    okay to assume that and similar tests run upstream by other functions?

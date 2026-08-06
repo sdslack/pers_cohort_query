@@ -1,13 +1,4 @@
-"""Functions to simulate data
-
-* make_ids - returns given number of IDs in a list
-* make_pers_cohorts - returns dataframe with random cohort of the given
-    size for each of the IDs in list, made with only the IDs in list
-* make_lab_values - returns dataframe with random lab values, with 3-10
-    measurements per person for each ID in list
-* write_data - writes given dataframe to specified output directory
-
-"""
+"""Functions to make simulated data inputs."""
 
 from pathlib import Path
 import numpy as np
@@ -18,17 +9,7 @@ SEED = 42
 
 def make_ids(n_indv: int) -> list[str]:
     """
-    Returns given number of IDs as a list.
-
-    Parameters
-    ----------
-    n_indv : int
-        Number of individuals to generate IDs for
-
-    Returns
-    -------
-    ids : list
-        String list of generated sequential IDs
+    Generate given number of sequential simulated IDs.
     """
     return [f"S{i:03d}" for i in range(1, n_indv + 1)]
 
@@ -37,24 +18,10 @@ def make_pers_cohorts(
     ids: list[str], cohort_size: int, rng: np.random.Generator
 ) -> pd.DataFrame:
     """
-    Returns dataframe with random cohort of the given size for each of the IDs
-    in list, made with only the IDs in list. First column is "id" for an
-    individual, and all remaining "member_#" columns in that row are their
-    cohort members.
+    Generate simulated cohorts for each ID.
 
-    Parameters
-    ----------
-    ids : list[str]
-        IDs to generate cohorts for and to use in cohorts
-    cohort_size: int
-        Size of cohorts to generate
-    rng : np.random.Generator
-        Random number generator to use for reproducibility
-
-    Returns
-    -------
-    cohorts : pd.DataFrame
-        DataFrame with generated cohorts
+    Each ID is assigned `cohort_size` cohort members sampled from the given list
+    of IDs. The random number generator is passed for reproducible generation.
     """
     cohorts = []
 
@@ -73,32 +40,21 @@ def make_pers_cohorts(
 
 
 def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame:
-    """
-    Returns dataframe with random lab values and dates between 2010-2020,
-    with 3-10 measurements per person for each ID in list. Columns are "id",
-    "date", and "value".
+    """Generate simulated longitudinal lab values for each ID.
 
-    Parameters
-    ----------
-    ids : list[str]
-        IDs to generate lab values for
-    rng : np.random.Generator
-        Random number generator to use for reproducibility
-
-    Returns
-    -------
-    lab_values : pd.DataFrame
-        DataFrame with generated lab values and dates between 2010-2020
+    Each person is assigned 3-10 measurements with simulated within-person and
+    between-person variation. The random number generator is passed for
+    reproducible generation.
     """
     lab_values = pd.DataFrame()
 
-    # Generate measurements by first sampling a baseline from a normal
-    # distribution for each individual, then sample measurements from a normal
-    # distribution around each individual's baseline
+    # To simulate lab values with reasonable within-person and between-person
+    # variation, first sample a baseline from a normal distribution for each
+    # individual, then sample measurements from a normal distribution around
+    # each individual's baseline
     for id_ in ids:
         baseline = rng.normal(loc=100, scale=10)
         n_measurements = rng.integers(3, 11)
-        # Evenly spaced dates between 2010 and 2020 by number of measurements
         dates = pd.date_range(
             start="2010-01-01", end="2020-12-31", periods=n_measurements
         )
@@ -115,40 +71,20 @@ def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame:
     return lab_values
 
 
-def write_data(df: pd.DataFrame, output_path: Path) -> None:
-    """
-    Writes given DataFrame to the specified output path
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame to write to CSV
-    output_path : Path
-        Path to write the generated data to
-    """
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, index=False)
-
-
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
-    output_dir = repo_root / "data" / "input"
+    output_dir = repo_root / "examples" / "input"
 
-    # Make IDs for all individuals in the test data
     ids = make_ids(100)
 
-    # Make personalized cohorts for each individual in the test data, using
-    # the generated IDs, with given cohort size
     rng = np.random.default_rng(SEED)
     cohorts = make_pers_cohorts(ids, 10, rng)
 
-    # Make the lab values for each individual in the test data, using the
-    # generated IDs
     lab_values = make_lab_values(ids, rng)
 
-    # Write out test data
-    write_data(cohorts, output_dir / "cohorts.csv")
-    write_data(lab_values, output_dir / "lab_values.csv")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    cohorts.to_csv(output_dir / "cohorts.tsv", sep="\t", index=False)
+    lab_values.to_csv(output_dir / "lab_values.tsv", sep="\t", index=False)
 
 
 if __name__ == "__main__":

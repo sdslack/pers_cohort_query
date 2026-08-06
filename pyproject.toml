@@ -23,4 +23,5 @@ dev = [
     "ruff",
     "pre-commit",
     "pytest",
+    "mypy",
 ]
