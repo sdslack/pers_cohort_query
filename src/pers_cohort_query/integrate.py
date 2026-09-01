@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -15,6 +16,17 @@ logger = logging.getLogger(__name__)
 
 class ZeroVarianceError(ValueError):
     """Raised when density peak estimation is attempted on constant values."""
+
+
+@dataclass
+class PersCohortValues:
+    """Lab values and summary statistics for an individual's personalized cohort."""
+
+    person_id: str
+    values: np.ndarray
+    peak: float
+    mean: float
+    stddev: float
 
 
 def get_density_peak(values: pd.Series | np.ndarray | list[float]) -> float:
@@ -59,11 +71,10 @@ def get_pers_cohort_density_peaks(
     cohorts: pd.DataFrame,
     id_col: str = "id",
     value_col: str = "value",
-) -> dict[str, float]:
-    """Compute density peaks for each person's pooled cohort lab values.
-
-    For each person in `cohorts`, all lab values from their listed cohort
-    members are used to compute a single density peak.
+) -> dict[str, PersCohortValues]:
+    """Compute a density peak for each person's pooled cohort lab values. Save
+    values, peak, mean, and standard deviation for each person in
+    PersCohortValues objects, returned in a dictionary keyed by person ID.
     """
     member_columns = [column for column in cohorts.columns if column != id_col]
     people_values: dict[str, np.ndarray] = {
@@ -71,7 +82,7 @@ def get_pers_cohort_density_peaks(
         for person_id, group in lab_values.groupby(id_col)[value_col]
     }
 
-    peaks: dict[str, float] = {}
+    peaks: dict[str, PersCohortValues] = {}
     for _, cohort_row in cohorts.iterrows():
         person_id = cohort_row[id_col]
         members = cohort_row[member_columns]
@@ -81,13 +92,25 @@ def get_pers_cohort_density_peaks(
         )
 
         try:
-            peaks[person_id] = get_density_peak(cohort_values)
+            peak = get_density_peak(cohort_values)
+            mean = float(np.mean(cohort_values))
+            stddev = float(np.std(cohort_values))
         except ZeroVarianceError:
             logger.warning(
                 "Cohort for person '%s' has zero variance; setting peak to NaN.",
                 person_id,
             )
-            peaks[person_id] = np.nan
+            peak = np.nan
+            mean = np.nan
+            stddev = np.nan
+
+        peaks[person_id] = PersCohortValues(
+            person_id=person_id,
+            values=cohort_values,
+            peak=peak,
+            mean=mean,
+            stddev=stddev,
+        )
 
     return peaks
 
@@ -111,7 +134,7 @@ def compute_cohort_shifts(
     )
 
     rows: list[dict[str, Any]] = [
-        {id_col: person_id, "shift": full_peak - cohort_peak}
-        for person_id, cohort_peak in cohort_peaks.items()
+        {id_col: person_id, "shift": full_peak - cohort.peak}
+        for person_id, cohort in cohort_peaks.items()
     ]
     return pd.DataFrame(rows)

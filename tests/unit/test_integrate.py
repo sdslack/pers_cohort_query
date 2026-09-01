@@ -5,6 +5,7 @@ from pers_cohort_query.integrate import (
     get_density_peak,
     get_pers_cohort_density_peaks,
     compute_cohort_shifts,
+    PersCohortValues,
     ZeroVarianceError,
 )
 import numpy as np
@@ -83,7 +84,8 @@ def test_get_pers_cohort_density_peaks_example():
 
     assert isinstance(pers_peaks, dict)
     assert set(pers_peaks.keys()) == {"1", "2"}
-    assert all(isinstance(peak, float) for peak in pers_peaks.values())
+    assert all(isinstance(v, PersCohortValues) for v in pers_peaks.values())
+    assert all(isinstance(v.peak, float) for v in pers_peaks.values())
 
 
 def test_get_pers_cohort_density_peaks_extra_person_in_lab_values():
@@ -101,7 +103,8 @@ def test_get_pers_cohort_density_peaks_extra_person_in_lab_values():
 
     assert isinstance(pers_peaks, dict)
     assert set(pers_peaks.keys()) == {"1"}
-    assert all(isinstance(peak, float) for peak in pers_peaks.values())
+    assert all(isinstance(v, PersCohortValues) for v in pers_peaks.values())
+    assert all(isinstance(v.peak, float) for v in pers_peaks.values())
 
 
 def test_get_pers_cohort_density_peaks_zero_variance_cohort_is_nan(caplog):
@@ -118,7 +121,9 @@ def test_get_pers_cohort_density_peaks_zero_variance_cohort_is_nan(caplog):
     with caplog.at_level("WARNING"):
         pers_peaks = get_pers_cohort_density_peaks(lab_values, cohorts)
 
-    assert np.isnan(pers_peaks["1"])
+    assert np.isnan(pers_peaks["1"].peak)
+    assert np.isnan(pers_peaks["1"].mean)
+    assert np.isnan(pers_peaks["1"].stddev)
     assert "zero variance" in caplog.text
 
 
