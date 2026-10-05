@@ -92,10 +92,9 @@ range minus their shift) is used to calculate:
   `pers_only` (flagged only by personalized), `standard_only` (flagged only by
   standard), or `standard_same_or_early` (flagged by both, standard on the same
   date or earlier)
-+ a measurement-level file, `<output>_measurements.tsv`, with each
-  measurement's standard and personalized thresholds and a `conf_low`/
-  `conf_high` label (`tp`, `fp`, `fn`, `tn`, treating the personalized
-  threshold as ground truth)
++ a measurement-level file with each measurement's standard and personalized
+  thresholds and a confusion matrix `conf_low`/`conf_high` label (`tp`, `fp`,
+  `fn`, `tn`, treating the personalized threshold as ground truth)
 
 ```bash
 pers-cohort-query \

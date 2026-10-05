@@ -39,11 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help=(
-            "Path to a thresholds TSV file with a single row (columns: low "
-            "and/or high) giving the standard reference range applied to "
-            "everyone. If provided, also adds each person's warning status "
-            "for each end as columns in the output, and writes "
-            "measurement-level classifications to <output>_measurements.tsv."
+            "Optional path to a thresholds TSV file with a single row"
+            "(columns: low and/or high) giving the standard reference range."
+            "If provided, summarizes shifts on person- and measurement-level."
         ),
     )
     parser.add_argument(
