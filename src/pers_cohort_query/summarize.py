@@ -13,6 +13,10 @@ def get_threshold_ends(
     high_col: str = "high",
 ) -> dict[str, float]:
     """Return the threshold for each end ("low"/"high") in `thresholds`."""
+    if len(thresholds) != 1:
+        raise ValueError(
+            f"Thresholds must have exactly one row, found {len(thresholds)}"
+        )
     ends = {}
     for end, col in [("low", low_col), ("high", high_col)]:
         if col in thresholds.columns and pd.notna(thresholds[col].iloc[0]):
@@ -20,6 +24,11 @@ def get_threshold_ends(
     if not ends:
         raise ValueError(
             f"Thresholds must have a value in at least one of: {low_col}, {high_col}"
+        )
+    if "low" in ends and "high" in ends and ends["low"] > ends["high"]:
+        raise ValueError(
+            f"Low threshold ({ends['low']}) must not exceed high threshold "
+            f"({ends['high']})"
         )
     return ends
 
