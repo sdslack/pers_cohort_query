@@ -78,6 +78,34 @@ pers-cohort-query \
 
 ```
 
+*TO NOTE: not fully implemented yet:*
+
+Optionally, use `--thresholds` with a TSV file containing a single standard/
+population reference range (columns `low` and/or `high`) to also run the step
+that summarizes the cohort shifts. This range is applied to everyone; see
+`examples/input/thresholds.tsv` for an example. If only one of `low`/`high` is
+given, only that end is checked. Each person's personalized range (standard
+range minus their shift) is used to calculate:
+
++ `low_status`, `high_status` (added to the output file): `normal` (flagged by
+  neither threshold), `pers_early` (flagged by both, personalized first),
+  `pers_only` (flagged only by personalized), `standard_only` (flagged only by
+  standard), or `standard_same_or_early` (flagged by both, standard on the same
+  date or earlier)
++ a measurement-level file, `<output>_measurements.tsv`, with each
+  measurement's standard and personalized thresholds and a `conf_low`/
+  `conf_high` label (`tp`, `fp`, `fn`, `tn`, treating the personalized
+  threshold as ground truth)
+
+```bash
+pers-cohort-query \
+    --lab-values examples/input/lab_values.tsv \
+    --cohorts examples/input/cohorts.tsv \
+    --thresholds examples/input/thresholds.tsv \
+    --output examples/output/cohort_shifts.tsv
+
+```
+
 **Note:** The `data/` directory is ignored by git, so it can be used to store
 your own private input files and output files.
 
