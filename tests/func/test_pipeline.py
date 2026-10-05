@@ -17,6 +17,7 @@ INPUT_DIR = Path(__file__).resolve().parent.parent / "data" / "input"
 
 LAB_VALUES_PATH = INPUT_DIR / "lab_values_small.tsv"
 COHORTS_PATH = INPUT_DIR / "cohorts_small.tsv"
+THRESHOLDS_PATH = INPUT_DIR / "thresholds_small.tsv"
 
 EXPECTED_SHIFTS = {
     "S001": pytest.approx(-4.211079, abs=1e-4),
@@ -58,3 +59,34 @@ def test_cli_writes_output_file_from_small_fixtures(tmp_path):
     assert set(written["id"]) == set(EXPECTED_SHIFTS)
     for _, row in written.iterrows():
         assert row["shift"] == EXPECTED_SHIFTS[row["id"]]
+
+
+def test_cli_adds_summary_columns_with_thresholds(tmp_path):
+    output_path = tmp_path / "cohort_shifts_small.tsv"
+
+    main(
+        [
+            "--lab-values",
+            str(LAB_VALUES_PATH),
+            "--cohorts",
+            str(COHORTS_PATH),
+            "--thresholds",
+            str(THRESHOLDS_PATH),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    written = pd.read_csv(output_path, sep="\t", dtype={"id": str})
+    assert list(written.columns) == ["id", "shift", "low_status", "high_status"]
+    assert set(written["id"]) == set(EXPECTED_SHIFTS)
+    assert len(written) == len(EXPECTED_SHIFTS)
+
+    measurements_path = tmp_path / "cohort_shifts_small_measurements.tsv"
+    measurements = pd.read_csv(measurements_path, sep="\t", dtype={"id": str})
+    # Only measurements for people with a shift (not cohort members) are kept.
+    lab_values = pd.read_csv(LAB_VALUES_PATH, sep="\t", dtype={"id": str})
+    assert len(measurements) == lab_values["id"].isin(EXPECTED_SHIFTS).sum()
+    assert {"low", "pers_low", "conf_low", "high", "pers_high", "conf_high"} <= set(
+        measurements.columns
+    )

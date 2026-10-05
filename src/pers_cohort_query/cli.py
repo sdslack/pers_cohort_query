@@ -4,8 +4,11 @@ import argparse
 from pathlib import Path
 from importlib.metadata import version
 
+import pandas as pd
+
 from .io import load_query_inputs
 from .integrate import compute_cohort_shifts
+from .summarize import summarize_shifts
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -29,6 +32,17 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Path to the cohorts CSV/TSV file",
         required=True,
+    )
+    parser.add_argument(
+        "-t",
+        "--thresholds",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to a thresholds TSV file with a single row"
+            "(columns: low and/or high) giving the standard reference range."
+            "If provided, summarizes shifts on person- and measurement-level."
+        ),
     )
     parser.add_argument(
         "-o",
@@ -70,6 +84,12 @@ def main(argv: list[str] | None = None) -> None:
         "--cohorts": args.cohorts.resolve(),
         "--output": args.output.resolve(),
     }
+    if args.thresholds is not None:
+        paths["--thresholds"] = args.thresholds.resolve()
+        measurements_output = args.output.with_name(
+            f"{args.output.stem}_measurements{args.output.suffix}"
+        )
+        paths["measurements output"] = measurements_output.resolve()
     if len(set(paths.values())) != len(paths):
         raise ValueError("Multiple input paths can't point to the same file.")
 
@@ -86,6 +106,20 @@ def main(argv: list[str] | None = None) -> None:
 
     output_dir = Path(args.output).parent
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.thresholds is not None:
+        thresholds = pd.read_csv(args.thresholds, sep="\t")
+        shifts, classified = summarize_shifts(
+            lab_values,
+            thresholds,
+            shifts,
+            id_col=args.id_col,
+            date_col=args.date_col,
+            value_col=args.value_col,
+        )
+        classified.to_csv(measurements_output, sep="\t", index=False)
+        print(f"Wrote measurement-level output to {measurements_output}")
+
     shifts.to_csv(Path(args.output), sep="\t", index=False)
     print(f"Wrote output to {args.output}")
 
