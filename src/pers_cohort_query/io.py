@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -157,9 +158,20 @@ def load_pcs(
     n_pcs: int | None = None,
 ) -> pd.DataFrame:
     """Load and validate the genetic PCs input TSV file, with columns `id_col`
-    and `PC1`..`PCN`.
+    and `PC1`..`PCN` (or `pc1`..`pcN`, which are renamed to uppercase).
     """
     pcs = pd.read_csv(pcs_path, sep="\t", dtype={id_col: str})
+    pcs = pcs.rename(
+        columns={
+            col: col.upper()
+            for col in pcs.columns
+            if col != id_col and re.fullmatch(r"pc\d+", col)
+        }
+    )
+    if pcs.columns.duplicated().any():
+        raise ValueError(
+            "PCs file cannot contain the same PC column in both upper and lower case."
+        )
     validate_pcs(pcs, id_col=id_col, n_pcs=n_pcs)
     return pcs
 

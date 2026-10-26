@@ -544,4 +544,25 @@ def test_load_pcs_keeps_ids_as_strings(tmp_path):
     assert list(pcs["id"]) == ["01", "1"]
 
 
+def test_load_pcs_accepts_lowercase_pc_columns(tmp_path):
+    pcs_path = tmp_path / "pcs.tsv"
+    pd.DataFrame({"id": ["A", "B"], "pc1": [0.1, 0.2], "pc2": [0.3, 0.4]}).to_csv(
+        pcs_path, sep="\t", index=False
+    )
+
+    pcs = load_pcs(pcs_path, n_pcs=2)
+
+    assert list(pcs.columns) == ["id", "PC1", "PC2"]
+
+
+def test_load_pcs_raises_error_for_same_pc_column_in_both_cases(tmp_path):
+    pcs_path = tmp_path / "pcs.tsv"
+    pd.DataFrame({"id": ["A", "B"], "pc1": [0.1, 0.2], "PC1": [0.3, 0.4]}).to_csv(
+        pcs_path, sep="\t", index=False
+    )
+
+    with pytest.raises(ValueError, match="both upper and lower case"):
+        load_pcs(pcs_path)
+
+
 # endregion
