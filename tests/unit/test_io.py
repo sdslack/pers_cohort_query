@@ -3,8 +3,11 @@
 from datetime import date
 
 from pers_cohort_query.io import (
+    get_pc_columns,
+    load_pcs,
     validate_lab_values,
     validate_cohorts,
+    validate_pcs,
     load_query_inputs,
 )
 import pandas as pd
@@ -461,6 +464,84 @@ def test_load_query_inputs_recognizes_different_string_same_numeric_ids(tmp_path
 
     assert list(lab_values["id"]) == ["01", "1", "2"]
     assert list(cohorts["id"]) == ["01", "1"]
+
+
+# endregion
+
+
+# region: tests for PCs
+
+
+def make_pcs() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "id": ["A", "B", "C"],
+            "PC2": [0.5, 0.6, 0.7],
+            "PC10": [1.0, 1.1, 1.2],
+            "PC1": [0.1, 0.2, 0.3],
+            "ancestry": ["x", "y", "z"],
+        }
+    )
+
+
+def test_get_pc_columns_returns_pc_columns_in_numeric_order():
+    assert get_pc_columns(make_pcs()) == ["PC1", "PC2", "PC10"]
+
+
+def test_get_pc_columns_limits_to_first_n_pcs():
+    assert get_pc_columns(make_pcs(), n_pcs=2) == ["PC1", "PC2"]
+
+
+@pytest.mark.parametrize("n_pcs", [0, 3])
+def test_get_pc_columns_raises_error_for_unavailable_n_pcs(n_pcs):
+    # PC3 is missing, so n_pcs=3 can't be satisfied even though 3 PCs exist
+    with pytest.raises(ValueError, match="requires columns PC1 through"):
+        get_pc_columns(make_pcs(), n_pcs=n_pcs)
+
+
+def test_validate_pcs_raises_error_for_no_pc_columns():
+    pcs = pd.DataFrame({"id": ["A"], "pc_1": [0.1]})
+    with pytest.raises(KeyError, match="at least one column named"):
+        validate_pcs(pcs)
+
+
+def test_validate_pcs_raises_error_for_duplicate_ids():
+    pcs = make_pcs()
+    pcs.loc[1, "id"] = "A"
+    with pytest.raises(ValueError, match="duplicate values"):
+        validate_pcs(pcs)
+
+
+def test_validate_pcs_raises_error_for_missing_values():
+    pcs = make_pcs()
+    pcs.loc[1, "PC2"] = None
+    with pytest.raises(ValueError, match="PCs contain missing values"):
+        validate_pcs(pcs)
+
+
+@pytest.mark.parametrize("bad_value", ["abc", float("inf")])
+def test_validate_pcs_raises_error_for_non_numeric_or_infinite_values(bad_value):
+    pcs = make_pcs().astype({"PC1": object})
+    pcs.loc[1, "PC1"] = bad_value
+    with pytest.raises(ValueError, match="finite numeric values"):
+        validate_pcs(pcs)
+
+
+def test_validate_pcs_ignores_unused_columns():
+    pcs = make_pcs()
+    pcs.loc[1, "ancestry"] = None
+    validate_pcs(pcs)
+
+
+def test_load_pcs_keeps_ids_as_strings(tmp_path):
+    pcs_path = tmp_path / "pcs.tsv"
+    pd.DataFrame({"id": ["01", "1"], "PC1": [0.1, 0.2]}).to_csv(
+        pcs_path, sep="\t", index=False
+    )
+
+    pcs = load_pcs(pcs_path)
+
+    assert list(pcs["id"]) == ["01", "1"]
 
 
 # endregion
