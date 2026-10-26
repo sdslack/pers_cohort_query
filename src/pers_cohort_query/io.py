@@ -106,6 +106,64 @@ def validate_cohorts(
         raise ValueError("Cohort members cannot be repeated within a single cohort.")
 
 
+def get_pc_columns(pcs: pd.DataFrame, *, n_pcs: int | None = None) -> list[str]:
+    """Return the `PC<number>` column names in numeric order, limited to the
+    first `n_pcs` if given.
+    """
+    pc_columns = sorted(
+        pcs.columns[pcs.columns.str.fullmatch(r"PC\d+")], key=lambda c: int(c[2:])
+    )
+    if not pc_columns:
+        raise KeyError("PCs file must have at least one column named `PC<number>`.")
+    if n_pcs is None:
+        return pc_columns
+
+    expected_columns = [f"PC{i}" for i in range(1, n_pcs + 1)]
+    if n_pcs < 1 or pc_columns[:n_pcs] != expected_columns:
+        raise ValueError(
+            f"`n_pcs` ({n_pcs}) requires columns PC1 through PC{n_pcs} in the PCs file."
+        )
+    return expected_columns
+
+
+def validate_pcs(
+    pcs: pd.DataFrame,
+    *,
+    id_col: str = "id",
+    n_pcs: int | None = None,
+) -> None:
+    _validate_not_empty(pcs, "PCs")
+    _validate_required_columns(pcs, {id_col}, "PCs")
+    pc_columns = get_pc_columns(pcs, n_pcs=n_pcs)
+    required_columns = {id_col, *pc_columns}
+    _validate_no_missing_values(pcs, required_columns, "PCs")
+
+    if pcs[id_col].duplicated().any():
+        raise ValueError("PCs cannot contain duplicate values in the `id_col` column.")
+
+    try:
+        pc_values = pcs[pc_columns].apply(pd.to_numeric, errors="raise")
+    except ValueError as e:
+        raise ValueError("PC columns must contain only finite numeric values.") from e
+
+    if not np.isfinite(pc_values.to_numpy()).all():
+        raise ValueError("PC columns must contain only finite numeric values.")
+
+
+def load_pcs(
+    pcs_path: str | Path,
+    *,
+    id_col: str = "id",
+    n_pcs: int | None = None,
+) -> pd.DataFrame:
+    """Load and validate the genetic PCs input TSV file, with columns `id_col`
+    and `PC1`..`PCN`.
+    """
+    pcs = pd.read_csv(pcs_path, sep="\t", dtype={id_col: str})
+    validate_pcs(pcs, id_col=id_col, n_pcs=n_pcs)
+    return pcs
+
+
 def load_query_inputs(
     lab_values_path: str | Path,
     cohorts_path: str | Path,
