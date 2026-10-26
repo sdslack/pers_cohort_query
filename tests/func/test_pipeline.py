@@ -90,3 +90,46 @@ def test_cli_adds_summary_columns_with_thresholds(tmp_path):
     assert {"low", "pers_low", "conf_low", "high", "pers_high", "conf_high"} <= set(
         measurements.columns
     )
+
+
+def test_cli_builds_cohorts_from_pcs(tmp_path):
+    lab_values = pd.read_csv(LAB_VALUES_PATH, sep="\t", dtype={"id": str})
+    ids = sorted(lab_values["id"].unique())
+    pcs = pd.DataFrame({"id": ids, "PC1": range(len(ids)), "PC2": 0.0})
+    pcs_path = tmp_path / "pcs.tsv"
+    pcs.to_csv(pcs_path, sep="\t", index=False)
+    output_path = tmp_path / "cohort_shifts.tsv"
+
+    main(
+        [
+            "--lab-values",
+            str(LAB_VALUES_PATH),
+            "--pcs",
+            str(pcs_path),
+            "--k-neighbors",
+            "4",
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    cohorts = pd.read_csv(tmp_path / "cohort_shifts_cohorts.tsv", sep="\t", dtype=str)
+    distances = pd.read_csv(tmp_path / "cohort_shifts_cohort_distances.tsv", sep="\t")
+    assert cohorts.shape == (len(ids), 5)
+    assert distances.shape == (len(ids), 5)
+    written = pd.read_csv(output_path, sep="\t", dtype={"id": str})
+    assert set(written["id"]) == set(ids)
+
+
+def test_cli_rejects_both_cohorts_and_pcs(tmp_path):
+    with pytest.raises(SystemExit):
+        main(
+            [
+                "--lab-values",
+                str(LAB_VALUES_PATH),
+                "--cohorts",
+                str(COHORTS_PATH),
+                "--pcs",
+                str(tmp_path / "pcs.tsv"),
+            ]
+        )
