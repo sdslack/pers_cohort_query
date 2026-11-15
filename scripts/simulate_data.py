@@ -71,6 +71,25 @@ def make_lab_values(ids: list[str], rng: np.random.Generator) -> pd.DataFrame:
     return lab_values
 
 
+def make_pcs(
+    ids: list[str], n_pcs: int, n_groups: int, rng: np.random.Generator
+) -> pd.DataFrame:
+    """Generate simulated genetic PCs for each ID.
+
+    Each person is assigned to one of `n_groups` clusters and their PCs are
+    sampled around that cluster's center, with variance decreasing for later
+    PCs.
+    """
+    centers = rng.normal(scale=0.05, size=(n_groups, n_pcs))
+    groups = rng.integers(n_groups, size=len(ids))
+    scales = 0.01 / np.arange(1, n_pcs + 1)
+    values = centers[groups] + rng.normal(size=(len(ids), n_pcs)) * scales
+
+    pcs = pd.DataFrame(values, columns=[f"PC{i}" for i in range(1, n_pcs + 1)])
+    pcs.insert(0, "id", ids)
+    return pcs
+
+
 def main() -> None:
     repo_root = Path(__file__).resolve().parent.parent
     output_dir = repo_root / "examples" / "input"
@@ -82,9 +101,13 @@ def main() -> None:
 
     lab_values = make_lab_values(ids, rng)
 
+    # Generated last so earlier simulated data is unchanged by adding PCs
+    pcs = make_pcs(ids, 16, 3, rng)
+
     output_dir.mkdir(parents=True, exist_ok=True)
     cohorts.to_csv(output_dir / "cohorts.tsv", sep="\t", index=False)
     lab_values.to_csv(output_dir / "lab_values.tsv", sep="\t", index=False)
+    pcs.to_csv(output_dir / "pcs.tsv", sep="\t", index=False)
 
 
 if __name__ == "__main__":

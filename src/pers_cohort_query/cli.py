@@ -6,7 +6,8 @@ from importlib.metadata import version
 
 import pandas as pd
 
-from .io import load_query_inputs
+from .io import load_pcs, load_query_inputs
+from .extract import build_pc_cohorts
 from .integrate import compute_cohort_shifts
 from .summarize import summarize_shifts
 
@@ -26,12 +27,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the lab values CSV/TSV file",
         required=True,
     )
-    parser.add_argument(
+    cohort_source = parser.add_mutually_exclusive_group(required=True)
+    cohort_source.add_argument(
         "-c",
         "--cohorts",
         type=Path,
         help="Path to the cohorts CSV/TSV file",
-        required=True,
+    )
+    cohort_source.add_argument(
+        "-p",
+        "--pcs",
+        type=Path,
+        help=(
+            "Path to a genetic PCs TSV file (columns: id_col, PC1..PCN) to "
+            "build PC-matched cohorts from, instead of passing --cohorts. "
+            "Built cohorts and neighbor distances are written next to --output."
+        ),
+    )
+    parser.add_argument(
+        "-k",
+        "--k-neighbors",
+        type=int,
+        default=100,
+        help="Number of nearest neighbors per cohort with --pcs (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--n-pcs",
+        type=int,
+        default=None,
+        help="Use only PC1..PC<n-pcs> with --pcs (default: all PC columns)",
     )
     parser.add_argument(
         "-t",
@@ -81,9 +105,21 @@ def main(argv: list[str] | None = None) -> None:
 
     paths = {
         "--lab-values": args.lab_values.resolve(),
-        "--cohorts": args.cohorts.resolve(),
         "--output": args.output.resolve(),
     }
+    if args.pcs is not None:
+        cohorts_path = args.output.with_name(
+            f"{args.output.stem}_cohorts{args.output.suffix}"
+        )
+        distances_path = args.output.with_name(
+            f"{args.output.stem}_cohort_distances{args.output.suffix}"
+        )
+        paths["--pcs"] = args.pcs.resolve()
+        paths["cohorts output"] = cohorts_path.resolve()
+        paths["cohort distances output"] = distances_path.resolve()
+    else:
+        cohorts_path = args.cohorts
+        paths["--cohorts"] = args.cohorts.resolve()
     if args.thresholds is not None:
         paths["--thresholds"] = args.thresholds.resolve()
         measurements_output = args.output.with_name(
@@ -93,9 +129,22 @@ def main(argv: list[str] | None = None) -> None:
     if len(set(paths.values())) != len(paths):
         raise ValueError("Multiple input paths can't point to the same file.")
 
+    output_dir = Path(args.output).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.pcs is not None:
+        pcs = load_pcs(args.pcs, id_col=args.id_col, n_pcs=args.n_pcs)
+        built_cohorts, cohort_distances = build_pc_cohorts(
+            pcs, args.k_neighbors, id_col=args.id_col, n_pcs=args.n_pcs
+        )
+        built_cohorts.to_csv(cohorts_path, sep="\t", index=False)
+        cohort_distances.to_csv(distances_path, sep="\t", index=False)
+        print(f"Wrote cohorts to {cohorts_path}")
+        print(f"Wrote cohort distances to {distances_path}")
+
     lab_values, cohorts = load_query_inputs(
         args.lab_values,
-        args.cohorts,
+        cohorts_path,
         id_col=args.id_col,
         date_col=args.date_col,
         value_col=args.value_col,
@@ -103,9 +152,6 @@ def main(argv: list[str] | None = None) -> None:
     shifts = compute_cohort_shifts(
         lab_values, cohorts, id_col=args.id_col, value_col=args.value_col
     )
-
-    output_dir = Path(args.output).parent
-    output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.thresholds is not None:
         thresholds = pd.read_csv(args.thresholds, sep="\t")

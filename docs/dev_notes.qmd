@@ -11,31 +11,14 @@ format:
 ## pers_cohort_query modules {.smaller}
 
 - **module: extract** lab values and cohorts from a database
-  - *module to be developed next*
+  - *in development*
 - **module: integrate** lab values and cohorts to compute personalized cohort shifts
-  - *only module currently developed & reviewed*
-- **module: summarize** shifts at personalize and population level (?)
-  - *skeleton to be added next, then hold off until after extract module*
+  - *developed & reviewed*
+- **module: summarize** shifts at personal and population level
+  - *skeleton developed*
 
-## integrate module review {.smaller}
 
-- **done:**
-  - switch all to TSV
-  - fix bugs (custom column names, edge cases)
-  - comment why instead of what, limit docstrings
-  - refactor to separate loading and validation
-  - factor validation patterns to functions
-  - separate modules into io.py, etc.
-  - enforce lab values numeric and finite
-  - return NaN for zero variance instead of throwing error
-  - small optimizations while keeping pandas
-
-## integrate module review {.smaller}
-
-- **to do:**
-  - output more than just shift peak (separate PR)
-
-## integrate module review {.smaller}
+## integrate module open questions {.smaller}
 
 - **to discuss:**
   - should missing values throw an error?
@@ -45,11 +28,13 @@ format:
   - should exact duplicate rows be allowed in input? (currently yes)
   - does GenoSiS require same cohort length, pad, or fail?
 
-## integrate module review {.smaller}
 
-- **maybe later:**
-  - export public functions for use
-  - consider conda-lock or uv for true reproducibility
-  - performance optimization if necessary (KDE with Fourier transform, etc.)
-  - implement pipeline as a Snakemake workflow
-  - consider swtiching Pandas for Polars
+## extract module plan {.smaller}
+
+- Use OHDSI Phenotype Library/ATLAS to get SQL cohort definitions for available
+  phenotypes (okay as initial limitation)
+
+## extract module questions {.smaller}
+
+- how to generalize "validity" of lab values?
+- okay to "limit" use to databases using OMOP CDM?

@@ -78,7 +78,24 @@ pers-cohort-query \
 
 ```
 
-*TO NOTE: not fully implemented yet:*
+Instead of providing `--cohorts`, cohorts can be built from by genetic PCs
+with `--pcs`, given a TSV file with columns `id` (or `id_col`) and
+`PC1`..`PCN`. Each individual's cohort is their `--k-neighbors` (default 100)
+nearest neighbors by Euclidean distance over all PC columns (or only
+`PC1`..`PC<n>` with `--n-pcs`). The built cohorts and the matching neighbor
+distances are written next to `--output` with `_cohorts` and
+`_cohort_distances` suffixes:
+
+```bash
+pers-cohort-query \
+    --lab-values examples/input/lab_values.tsv \
+    --pcs examples/input/pcs.tsv \
+    --k-neighbors 10 \
+    --output examples/output/cohort_shifts.tsv
+
+```
+
+*TO NOTE: thresholds not fully implemented yet:*
 
 Optionally, use `--thresholds` with a TSV file containing a single standard/
 population reference range (columns `low` and/or `high`) to also run the step
