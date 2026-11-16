@@ -84,7 +84,7 @@ def validate_cohorts(
     member_columns = [col for col in cohorts.columns if col != id_col]
     if len(member_columns) < 2:
         raise ValueError(
-            "Cohorts file must have at least two member columns in addition to"
+            "Cohorts file must have at least two member columns in addition to "
             "the `id_col` column."
         )
 
