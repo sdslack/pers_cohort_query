@@ -23,12 +23,10 @@ pip install .
 
 ```
 
-**Note:** The repository includes an example in `examples/` that is used in
-the example usage below: real genotypes from 1000 Genomes Phase 3 chr21 (2,504
-unrelated samples), with lab values simulated at random. Shared inputs are in
-`examples/input/` (the downloaded genotypes go in `examples/input/genetics/`),
-and each cohort method has its own folder (`examples/pca/`,
-`examples/genosis/`) used as `--output-dir`.
+Building cohorts from a VCF (`--vcf`) using `--method pca` also requires
+[PLINK2](https://www.cog-genomics.org/plink/2.0/). It's included in the
+development conda environment (`environment.yaml`), or can be installed with
+`conda install bioconda::plink2` or from the PLINK2 site.
 
 ## Development
 
@@ -103,8 +101,9 @@ values has already been done.
 2. genotype data for the individuals in the lab values file in VCF format.
 
 + If using genetic PCA, you can input a VCF (`--vcf`) or pre-computed genetic
-    PCs (`--pcs`)
+    PCs (`--pcs`).
 + If using GenoSiS, this input VCF must include haplotype phasing information.
++ Only autosomes are used for either method.
 
 Note that the same set of individuals must be present in both input files with
 the same ID format and column name as given with `id_col`.
@@ -150,16 +149,14 @@ This stage outputs a TSV file with two columns:
 
 ## Example Usage
 
-`examples/input/` includes simulated lab values `lab_values.tsv` and a
-threshold range `thresholds.tsv`.
+The repository includes `examples/` with genotypes from 1000 Genomes Phase 3
+chromosome 21 and lab values simulated randomly. Each cohort building method
+has a subfolder and shared inputs are in `examples/input`.
 
 ### PCA-based Cohorts
 
-For PCA-based cohorts, genetic PCs `pcs.tsv` computed from the 1000 Genomes
-genetic data are included at `examples/pca`.
-
-All output files are written to `--output-dir` with fixed names (`shifts.tsv`,
-plus the files described below).
+For PCA-based cohorts, there are two input options: build from pre-calculated
+genetic PCs or from a VCF.
 
 #### Build from PCs
 
@@ -176,9 +173,8 @@ pers-cohort-query \
 
 ```
 
-The built cohorts and the matching neighbor distances are written to
-`--output-dir` as `cohorts.tsv` and `cohort_distances.tsv`, which are also
-included for reference.
+All output files are written to `--output-dir` with fixed names (`cohorts.tsv`,
+`cohorts_distances.tsv`, `shifts.tsv`), and are included for reference.
 
 Optionally, add `--thresholds` with a TSV file containing a single standard/
 population reference range (columns `low` and/or `high`) to also run the step
@@ -203,19 +199,6 @@ pers-cohort-query \
     --lab-values examples/input/lab_values.tsv \
     --pcs examples/pca/pcs.tsv \
     --thresholds examples/input/thresholds.tsv \
-    --output-dir examples/pca
-
-```
-
-#### Use Existing Cohorts
-
-If cohorts are already defined, compute each individual's shift by passing them
-with `--cohorts`. An example file `cohorts.tsv` is included at `examples/pca`.
-
-```bash
-pers-cohort-query \
-    --lab-values examples/input/lab_values.tsv \
-    --cohorts examples/pca/cohorts.tsv \
     --output-dir examples/pca
 
 ```
@@ -256,6 +239,8 @@ pers-cohort-query \
 
 *TO NOTE: this not implemented in current tool version!*
 
+For GenoSiS-based cohorts, there is one input option: build from a phased VCF.
+
 #### Build from Genetic Data
 
 Pass a VCF with `--vcf` and add `--method genosis` to build cohorts with
@@ -281,4 +266,19 @@ pers-cohort-query \
 
 ```
 
-`cohorts.tsv` and `cohort_distances.tsv` are written to `--output-dir`.
+All output files are written to `--output-dir` with fixed names (`cohorts.tsv`,
+`cohorts_distances.tsv`, `shifts.tsv`).
+
+
+### Use Existing Cohorts
+
+If cohorts are already defined, shifts can be summarized by passing
+`--cohorts`. An example file `cohorts.tsv` is included at `examples/pca`.
+
+```bash
+pers-cohort-query \
+    --lab-values examples/input/lab_values.tsv \
+    --cohorts examples/pca/cohorts.tsv \
+    --output-dir examples/pca
+
+```
