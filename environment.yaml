@@ -1,9 +1,11 @@
 name: pers_cohort_query
 channels:
   - conda-forge
+  - bioconda
 dependencies:
   - python=3.11
   - numpy
   - pandas
   - pip
+  - plink2==2.0.0a7.post13
   - scipy
