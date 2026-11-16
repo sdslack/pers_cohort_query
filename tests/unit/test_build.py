@@ -6,7 +6,7 @@ import pytest
 
 from pers_cohort_query.build import build_pc_cohorts, compute_pcs
 from pers_cohort_query.io import validate_cohorts
-from conftest import requires_plink2, write_two_group_vcf
+from helpers import requires_plink2, write_two_group_vcf
 
 
 # region: tests for compute_pcs
