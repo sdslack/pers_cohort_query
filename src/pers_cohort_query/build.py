@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -34,6 +35,11 @@ def compute_pcs(
     id_col: str = "id",
 ) -> pd.DataFrame:
     """Simple computation of genetic PCs from a VCF with plink2."""
+    if shutil.which("plink2") is None:
+        raise RuntimeError(
+            "plink2 not found on PATH; it's needed to compute PCs from --vcf. "
+            "Install it with `conda install -c bioconda plink2` or see the README."
+        )
     with tempfile.TemporaryDirectory() as tmp_dir:
         prefix = str(Path(tmp_dir) / "genotypes")
         run_plink2(
@@ -42,6 +48,7 @@ def compute_pcs(
             "--max-alleles", "2",
             "--maf", str(MIN_MAF),
             "--set-all-var-ids", "@:#:$r:$a",
+            "--autosome",
             "--make-pgen",
             "--out", prefix,
         )  # fmt: skip
