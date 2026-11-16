@@ -1,11 +1,39 @@
-"""Unit tests for pers_cohort_query.extract module."""
+"""Unit tests for pers_cohort_query.build module."""
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from pers_cohort_query.extract import build_pc_cohorts
+from pers_cohort_query.build import build_pc_cohorts, compute_pcs
 from pers_cohort_query.io import validate_cohorts
+from conftest import requires_plink2, write_two_group_vcf
+
+
+# region: tests for compute_pcs
+
+
+@requires_plink2
+def test_compute_pcs_separates_groups(tmp_path):
+    ids = [f"S{i:02d}" for i in range(60)]
+    vcf_path = tmp_path / "genotypes.vcf"
+    groups = write_two_group_vcf(vcf_path, ids)
+
+    pcs = compute_pcs(vcf_path, n_pcs=3)
+
+    assert list(pcs.columns) == ["id", "PC1", "PC2", "PC3"]
+    assert pcs["id"].to_list() == ids
+    assert abs(np.corrcoef(pcs["PC1"], groups)[0, 1]) > 0.9
+
+
+@requires_plink2
+def test_compute_pcs_uses_id_col(tmp_path):
+    ids = [f"S{i:02d}" for i in range(60)]
+    vcf_path = tmp_path / "genotypes.vcf"
+    write_two_group_vcf(vcf_path, ids)
+
+    pcs = compute_pcs(vcf_path, n_pcs=2, id_col="person_id")
+
+    assert list(pcs.columns) == ["person_id", "PC1", "PC2"]
 
 
 # region: tests for build_pc_cohorts
